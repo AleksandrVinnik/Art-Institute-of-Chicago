@@ -1,9 +1,12 @@
 # iOS App - Art Institute of Chicago
-https://img.shields.io/badge/Swift-5.9-orange.svg
+
+https://img.shields.io/badge/Swift-5.9-orange.svg  
 https://img.shields.io/badge/platform-iOS-blue.svg
 
 
 Explore the vast collection of artworks from the Art Institute of Chicago directly on your iOS device. This SwiftUI application provides a seamless browsing experience with paginated loading and detailed artwork views using the museum's public API.
+
+---
 
 ## Features
 Features
@@ -15,6 +18,7 @@ Features
 🖌️ **High-Resolution Images** - IIIF protocol for optimized image delivery
 📊 **Pagination Tracking** - Real-time page position monitoring
 
+---
 
 ## Sequence Diagram 1: Data Flow Architecture
 
@@ -65,7 +69,7 @@ sequenceDiagram
 - **Adaptive Image Sizing:** IIIF protocol delivers appropriately sized images for each device
 - **Persistence:** ViewModel maintains pagination state across navigation events
 
-
+---
 
 ## Diagram 2: iOS Application Flow Architecture
 
@@ -95,6 +99,7 @@ This diagram illustrates the MVVM architecture implementation:
 - Detail view requests images from IIIF Image API  
 - Image data is rendered using SwiftUI's `AsyncImage`
 
+---
 
 ## Diagram 3: Detailed Data Flow
 
@@ -122,11 +127,15 @@ This diagram details the data transformation process:
 - IIIF Image API delivers optimized image data
 - `AsyncImage` View handles loading and rendering
 
+---
+
 ## Requirements
 
 iOS 16.0+
 Xcode 15.0+
 Swift 5.9+
+
+---
 
 ## Installation
 
@@ -141,6 +150,8 @@ cd art-institute-explorer
 open Art\ Institute\ of\ Chicago.xcodeproj
 
 Build and run the project (⌘ + R)
+
+---
 
 ## Usage
 
@@ -162,9 +173,13 @@ View artwork details including title and high-resolution image.
 Use the navigation bar to return to the list. 
 API Reference.
 
-This application uses the Art Institute of Chicago API:
+---
+
+
 
 ## Artwork List Endpoint
+
+This application uses the Art Institute of Chicago API:
 
 Endpoint - GET List of artworks:
 https://api.artic.edu/api/v1/artworks?page=2&limit=100
@@ -172,6 +187,8 @@ https://api.artic.edu/api/v1/artworks?page=2&limit=100
 
 Endpoint - GET image by imageId:
 https://www.artic.edu/iiif/2/{identifier}/full/843,/0/default.jpg
+
+---
 
 ## Code Structure
 
@@ -189,6 +206,8 @@ src/
 │   └── ArtworkDetailView.swift # AsyncImage
 └── Art_Institute_of_ChicagoApp.swift # @main
 ```
+
+---
 
 License
 
