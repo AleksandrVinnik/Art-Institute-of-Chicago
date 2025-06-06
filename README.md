@@ -46,7 +46,7 @@ sequenceDiagram
     App->>API: GET /artworks?page={n}
     API-->>App: New JSON response
     App->>User: Updates artwork list
-
+```
 
 ### Process Explanation
 
