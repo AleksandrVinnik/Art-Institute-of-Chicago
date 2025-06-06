@@ -29,15 +29,25 @@ This diagram illustrates the application's data retrieval and rendering process:
 
 ```mermaid
 sequenceDiagram
+    participant User
     participant App as iOS App
     participant API as Art Institute API
     participant IIIF as IIIF Image API
     
-    App->>API: GET /artworks?page={n}
+    User->>App: Launches application
+    App->>API: GET /artworks?page=1
     API-->>App: JSON response (artwork metadata)
-    App->>IIIF: GET /iiif/2/{imageId}/...
+    App->>User: Displays artwork list
+    
+    User->>App: Selects artwork from list
+    App->>IIIF: GET /iiif/2/{imageId}/full/843,/0/default.jpg
     IIIF-->>App: Image data
-    App->>User: Display artwork list + details
+    App->>User: Displays artwork details with image
+    
+    User->>App: Enters page number and taps "Go"
+    App->>API: GET /artworks?page={n}
+    API-->>App: New JSON response
+    App->>User: Updates artwork list
 ```
 
 ### Process Explanation
