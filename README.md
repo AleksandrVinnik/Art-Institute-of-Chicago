@@ -14,7 +14,7 @@ Explore the vast collection of artworks from the Art Institute of Chicago direct
 🧩 MVVM Architecture - Well-structured code separation
 🔄 Real-time Pagination Tracking - Current page and total pages display
 
-## Data Flow Architecture
+## Diagram 1: Basic Flow
 
 ```mermaid
 graph TD
@@ -27,9 +27,9 @@ graph TD
     E -->|Requests Image| F[IIIF Image API]
     F -->|Returns Image| E
     E -->|Displays Image| G[AsyncImage]
+```
 
-
-## Data Flow Diagram
+## Diagram 2: Detailed Data Flow
 
 ```mermaid
 graph TD
@@ -40,6 +40,7 @@ graph TD
     E -->|Selects| F[ArtworkDetailView]
     F -->|Requests| G[IIIF Image API]
     G -->|Image Data| H[AsyncImage View]
+```
 
 ## Requirements
 
