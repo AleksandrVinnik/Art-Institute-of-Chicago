@@ -10,14 +10,14 @@ Explore the vast collection of artworks from the Art Institute of Chicago direct
 ---
 
 ## Features
-Features
 
-🖼️ **Artwork Discovery** - Browse paginated collections with infinite scrolling
-🔍 **Precise Navigation** - Jump directly to specific pages
-📱 **Native iOS Experience** - Built with SwiftUI for smooth performance
-🌐 **Efficient API Integration** - Combine framework for responsive data loading
-🖌️ **High-Resolution Images** - IIIF protocol for optimized image delivery
-📊 **Pagination Tracking** - Real-time page position monitoring
+
+🖼️ **Artwork Discovery** - Browse paginated collections with infinite scrolling  
+🔍 **Precise Navigation** - Jump directly to specific pages  
+📱 **Native iOS Experience** - Built with SwiftUI for smooth performance  
+🌐 **Efficient API Integration** - Combine framework for responsive data loading  
+🖌️ **High-Resolution Images** - IIIF protocol for optimized image delivery  
+📊 **Pagination Tracking** - Real-time page position monitoring  
 
 ---
 
