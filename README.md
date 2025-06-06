@@ -6,13 +6,13 @@ Explore the vast collection of artworks from the Art Institute of Chicago direct
 
 ## Features
 
-📜 Paginated Artwork List - Infinite scrolling with automatic loading
-🔢 Page Navigation - Jump to specific pages with page number input
-🖼️ High-Resolution Images - IIIF protocol for optimised image delivery
-📱 Modern SwiftUI Interface - Clean, responsive design
-⚡️ Efficient Data Handling - Combine framework for API requests
-🧩 MVVM Architecture - Well-structured code separation
-🔄 Real-time Pagination Tracking - Current page and total pages display
+📜 **Paginated Artwork List** - Infinite scrolling with automatic loading  
+🔢 **Page Navigation** - Jump to specific pages with page number input  
+🖼️ **High-Resolution Images** - IIIF protocol for optimised image delivery  
+📱 **Modern SwiftUI Interface** - Clean, responsive design  
+⚡️ **Efficient Data Handling** - Combine framework for API requests  
+🧩 **MVVM Architecture** - Well-structured code separation  
+🔄 **Real-time Pagination Tracking** - Current page and total pages display  
 
 ## Diagram 1: Basic Flow
 
@@ -47,34 +47,40 @@ graph TD
 iOS 16.0+
 Xcode 15.0+
 Swift 5.9+
-Installation
 
-Clone the repository:
-bash
-git clone https://github.com/your-username/art-institute-explorer.git
-Open the project in Xcode:
-bash
+## Installation
+
+### Clone the repository:
+bash 
+git clone https://github.com/AleksandrVinnik/Art-Institute-of-Chicago
+
+### Open the project in Xcode:
+bash 
 cd art-institute-explorer
+
 open Art\ Institute\ of\ Chicago.xcodeproj
+
 Build and run the project (⌘ + R)
 
 ## Usage
 
-Browsing Artworks
+### Browsing Artworks
 
-The main screen displays a paginated list of artworks
-Scroll to load more artworks automatically
-Use the page navigation at the bottom to track your position
-Jumping to Specific Pages
+The main screen displays a paginated list of artworks. 
+Scroll to load more artworks automatically.
 
-Enter a page number in the text field
-Press "Go" to navigate directly to that page
-Viewing Artwork Details
+Use the page navigation at the bottom to track your position. 
+Jumping to Specific Pages.
 
-Tap any artwork title in the list
-View artwork details including title and high-resolution image
-Use the navigation bar to return to the list
-API Reference
+Enter a page number in the text field. 
+Press "Go" to navigate directly to that page.
+
+### Viewing Artwork Details
+
+Tap any artwork title in the list. 
+View artwork details including title and high-resolution image. 
+Use the navigation bar to return to the list. 
+API Reference.
 
 This application uses the Art Institute of Chicago API:
 
