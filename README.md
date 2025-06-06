@@ -80,27 +80,29 @@ This application uses the Art Institute of Chicago API:
 
 ## Artwork List Endpoint
 
-List of artworks Endpoint:
-GET https://api.artic.edu/api/v1/artworks?page={page}
+Endpoint - GET List of artworks:
+https://api.artic.edu/api/v1/artworks?page=2&limit=100
  
 
-Endpoint for an artwork with imageId:
-GET https://www.artic.edu/iiif/2/{imageId}/full/843,/0/default.jpg
+Endpoint - GET image by imageId:
+https://www.artic.edu/iiif/2/{identifier}/full/843,/0/default.jpg
 
 ## Code Structure
 
-text
-├── Models
-│   ├── Artwork.swift            # Artwork data model
-│   └── Pagination.swift         # Pagination metadata
-├── ViewModels
-│   └── ArtworkViewModel.swift   # Manages data fetching and state
-├── Views
-│   ├── ContentView.swift        # Main artwork list view
-│   ├── ArtworkView.swift        # Artwork list item
-│   └── ArtworkDetailView.swift  # Artwork detail view
-└── Art_Institute_of_ChicagoApp.swift # App entry point
 
+```tree
+src/
+├── Models/
+│   ├── Artwork.swift          # Codable struct
+│   └── Pagination.swift       # API pagination
+├── ViewModels/
+│   └── ArtworkViewModel.swift # ObservableObject
+├── Views/
+│   ├── ContentView.swift      # NavigationStack
+│   ├── ArtworkView.swift      # List item view
+│   └── ArtworkDetailView.swift # AsyncImage
+└── Art_Institute_of_ChicagoApp.swift # @main
+```
 
 License
 
