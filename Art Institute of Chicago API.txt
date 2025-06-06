@@ -1,0 +1,1625 @@
+ÿArt Institute of Chicago API
+swagger.jsonÿ(opens new window)
+ÿGitHubÿ(opens new window)
+* Documentation
+o Introduction
+* Quick Start
+* Conventions
+* Best Practices
+o Data Dumps
+* Data Dumps vs. API?
+* Scraping Data
+o Images
+* IIIF Image API
+* Image Sizes
+* IIIF Manifests
+* Image Dumps
+* Scraping Images
+* Copyright
+o General Information
+* Authentication
+* Pagination
+o Endpoints
+* Collections
+* Shop
+* Mobile
+* Digital Scholarly Catalogs
+* Static Archive
+* Website
+o Fields
+* Collections
+* Shop
+* Mobile
+* Digital Scholarly Catalogs
+* Static Archive
+* Website
+#INTRODUCTION
+TheÿArt Institute of Chicagoÿ(opens new window)'s API provides JSON-formatted data as a REST-style service that allows developers to explore and integrate the museum?s public data into their projects. This API is the same tool that powers ourÿwebsiteÿ(opens new window), ourÿmobile appÿ(opens new window), and many other technologies in the museum.
+If the application you're building will be public, please send it our way! We'd love to share it alongside some of theÿother projects that use our APIÿ(opens new window). And if you have any questions, please feel free to reach out to us:ÿengineering@artic.edu.
+#Quick Start
+AnÿAPIÿ(opens new window)is a structured way that one software application can talk to another. APIs power much of the software we use today, from the apps on our phones and watches to technology we see in sports and TV shows. We have built an API to let people like you easily get our data in an ongoing way.
+TIP
+Do you wantÿallÿof our data? Are you running into problems withÿthrottlingÿorÿdeep pagination? Consider using ourÿdata dumpsÿinstead of our API.
+For example, you can access theÿ/artworksÿlisting endpoint in our API by visiting the following URL to see all the published artworks in our collection:
+https://api.artic.edu/api/v1/artworks
+If you want to see data for just one artwork, you can use theÿ/artworks/{id}ÿdetail endpoint. For example, here'sÿStarry Night and the Astronautsÿ(opens new window)by Alma Thomas:
+https://api.artic.edu/api/v1/artworks/129884
+When you view these URLs in your browser, you might see a jumbled bunch of text. That's OK! If you're using Chrome, install theÿJSON Formatter extensionÿ(opens new window), hit reload, and the results will be formatted in a way humans can read, too.
+There is a lot of data you'll get for each artwork. If you want to only retrieve a certain set of fields, change theÿfieldsÿparameter in the query to list which ones you want, like this:
+https://api.artic.edu/api/v1/artworks?fields=id,title,artist_display,date_display,main_reference_number
+TIP
+Theÿfieldsÿparameter expects either an array of field names, or a comma-separated list of field names in a single string (e.g. example above). We encourage you to use it because it makes your queries run faster and lets us track which fields need continued support.
+You canÿpaginateÿthrough results usingÿpageÿandÿlimitÿparams:
+https://api.artic.edu/api/v1/artworks?page=2&limit=100
+If you want to search and filter the results, you can do so via our search endpoints. For example, here is aÿfull-text searchÿ(opens new window)for all artworks whose metadata contains some mention of cats:
+https://api.artic.edu/api/v1/artworks/search?q=cats
+Here is the same search, but filtered to only show artworks that are in the public domain:
+https://api.artic.edu/api/v1/artworks/search?q=cats&query[term][is_public_domain]=true
+Behind the scenes, our search is powered byÿElasticsearchÿ(opens new window). You can use itsÿQuery DSLÿ(opens new window)to interact with our API. The example above uses aÿtermÿ(opens new window)query. Other queries we use often includeÿexistsÿ(opens new window)andÿboolÿ(opens new window).ÿAggregationsÿ(opens new window)are also a powerful tool.
+Our API accepts queries through bothÿGETÿandÿPOST. It might be easier to visualize how theÿGETÿquery above is structured by comparing it to itsÿPOSTÿequivallent:
+curl --location --request POST 'https://api.artic.edu/api/v1/artworks/search' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "q": "cats",
+    "query": {
+        "term": {
+            "is_public_domain": true
+        }
+    }
+}'
+For production use, we recommend usingÿGETÿand passing the entire query as minified URL-encoded JSON via theÿparamsÿparameter. For example:
+https://api.artic.edu/api/v1/artworks/search?params=%7B%22q%22%3A%22cats%22%2C%22query%22%3A%7B%22term%22%3A%7B%22is_public_domain%22%3Atrue%7D%7D%7D
+WARNING
+Our API is flexible in how it accepts queries, but each method of querying is meant for a specific purpose. SeeÿGET vs. POSTÿfor more details.
+There's a lot of information you can get about our collection, and there's a lot more than artworks in our API. Explore our documentation to learn more!
+#Conventions
+* We refer to models in our API as "resources" (e.g.ÿartworks,ÿartists,ÿplaces)
+* Resources are typically accessed via their endpoints. Each resource has three endpoints:
+o Listing (e.g.ÿ/artworks)
+o Detail (e.g.ÿ/artworks/{id})
+o Search (e.g.ÿ/artworks/search) (optional)
+Some resources might lack a search endpoint if there appears to be no need for it yet.
+* Multi-word endpoints are hyphenated (e.g.ÿ/tour-stop).
+* All field names are lowercase and snake case (underscore case).
+* Every resource in the API hasÿidÿandÿtitleÿfields.
+* Fields that contain a single id reference to another resource are singular and end withÿ_id:
+* "artist_id": 51349,
+* Fields that contain id references to multiple records from another resource are singular and end withÿ_ids:
+* "style_ids": ["TM-4439", "TM-8542", "TM-4441"],
+* Fields that contain title references to records from other resources follow naming conventions similar to id-based fields:
+* "artist_title": "Ancient Roman",
+* "classification_titles": ["modern and contemporary art", "painting"],
+* Every title-based field has aÿkeywordÿsubfield in Elasticsearch, which is meant for filters and aggregations. See "New defaults" section inÿthis articleÿ(opens new window)for more info.
+* Numeric and boolean fields get parsed into actual numbers and booleans:
+* "artwork_id": "45", // BAD
+* "date_start": 1942, // GOOD
+* 
+* "is_preferred": "True", // BAD
+* "is_in_gallery": true, // GOOD
+* We never show any empty strings in the API. We only showÿnull:
+* "date_display": "", // BAD
+* "artist_display": null, // GOOD
+* We prefer to always show all fields, even if they areÿnullÿfor the current record:
+o If a field that typically returns a string, number, or object is empty for a given record, we return it asÿnull, rather than omitting it.
+o If a field typically returns an array, we prefer to return an empty array, rather than returningÿnull. This is done in part for backwards-compatibility reasons.
+#Best Practices
+Here are some tips that will make your application run faster and/or reduce load on our systems:
+* Cache API responses in your system when possible.
+* Use theÿfieldsÿparameter to tell us exactly what fields you need.
+* Batch detail queries with the multi-id parameter (?ids=).
+* Batch search queries withÿmulti-searchÿ(/msearch).
+* Whenÿdownloading images, useÿ/full/843,/0/default.jpgÿparameters.
+* When scraping, please use a single thread and self-throttle.
+* Consider usingÿdata dumpsÿinstead of scraping our API.
+#DATA DUMPS
+You can download a dump that contains all of our public data here:
+https://github.com/art-institute-of-chicago/api-data(opens new window)
+These data dumps are updated nightly. They are generated from our API. As such, they contain the same data as our API, and their schema mirrors that of the API. The data is dumped in JSON format, with one JSON file per record. Records are grouped by API resource type.
+Our intention with this approach is to make it easier to adapt code to draw from the data dumps instead of the API, and vice-versa. Since the schema is the same, switching between the two should be relatively straight-forward.
+If you notice schema discrepancies between the data dumps and the API, or if you need help with using our data dumps, pleaseÿopen an issueÿ(opens new window)in theÿapi-dataÿrepo.
+#Data Dumps vs. API?
+We recommend using the data dumps for scenarios such as the following:
+* You want to have a full copy of our data for archival purposes.
+* You want to scrape a large result set (>10,000 records).
+* You want to analyze or enhance our data.
+Use our API if the following fits your use case:
+* You want to integrate our data into a website or application.
+* You need real-time access to our data.
+#Scraping Data
+Generally, we ask that you avoid extensive scraping of our API. The API is meant for direct integration into websites and applications. The data dumps are meant for backups and analysis. Scraping our API puts undue stress on our systems. Instead of scraping, please download the data dumps and filter them locally to obtain the data you need.
+That said, we don't mind small-scale scraping of our API. It can be convenient to use our search endpoint to filter records and retrieve only the fields you need. You can even use theÿaggregationfunctionality of our search endpoints to run some simple analyses. Just remember that you cannot paginate beyond 10,000 results in our search endpoints (seeÿPagination).
+If you do decide to scrape our resources, please throttle your requests to no more than one per second and avoid running multiple scrapers in parallel.
+#IMAGES
+This API does not contain image files. However, it does contain all of the data you need to access our images. Our institution serves images via a separate API that is compliant with theÿIIIF Image API 2.0ÿ(opens new window)specification. Using metadata from this API, you can craft URLs that will allow you to access images of artworks from our collection.
+TheÿInternational Image Interoperability Framework (IIIF)ÿ(opens new window)stewards a set of open standards that enables rich access to digital media from libraries, archives, museums, and other cultural institutions around the world. In practical terms, they define several API specifications that enable interoperability. When a tool is built to be IIIF-compliant, it's easier to adapt it to consume images from any number of institutions that offer IIIF-compliant APIs.
+#IIIF Image API
+We deliver our images via theÿIIIF Image API 2.0ÿ(opens new window). Our IIIF URLs have the following structure:
+https://www.artic.edu/iiif/2/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
+We recommend the following URL structure for most use-cases:
+https://www.artic.edu/iiif/2/{identifier}/full/843,/0/default.jpg
+Let's jump right into an example. Here's how you can construct IIIF URLs:
+1. Retrieve one or more artworks withÿimage_idÿfields. Here are a few ways of doing so:
+2. # La Grande Jatte
+3. https://api.artic.edu/api/v1/artworks/27992?fields=id,title,image_id
+4. 
+5. # La Grande Jatte and The Bedroom
+6. https://api.artic.edu/api/v1/artworks?ids=27992,28560&fields=id,title,image_id
+7. 
+8. # Top two public domain artworks
+9. https://api.artic.edu/api/v1/artworks/search?query[term][is_public_domain]=true&limit=2&fields=id,title,image_id
+Let's go with the first one,ÿLa Grande Jatteÿ(opens new window). Your response will look something like this:
+{
+    "data": {
+        "id": 27992,
+        "title": "A Sunday on La Grande Jatte ? 1884",
+        "image_id": "1adf2696-8489-499b-cad2-821d7fde4b33"
+    },
+    "config": {
+        "iiif_url": "https://www.artic.edu/iiif/2",
+    }
+}
+10. Find the base IIIF Image API endpoint in theÿconfig.iiif_urlÿfield:
+11. https://www.artic.edu/iiif/2
+We recommend that you avoid hardcoding this value into your applications.
+12. Append theÿimage_idÿof the artwork as a segment to this URL:
+13. https://www.artic.edu/iiif/2/1adf2696-8489-499b-cad2-821d7fde4b33
+14. Appendÿ/full/843,/0/default.jpgÿto the URL:
+15. https://www.artic.edu/iiif/2/1adf2696-8489-499b-cad2-821d7fde4b33/full/843,/0/default.jpg
+That's it! This is a valid IIIF URL. It will return the same image as we use on our website:
+
+Some artworks also haveÿalt_image_ids, such as theÿCoronation Stone of Motecuhzoma IIÿ(opens new window):
+https://api.artic.edu/api/v1/artworks/75644?fields=id,title,image_id,alt_image_ids
+Exhibitions have images, too:
+https://api.artic.edu/api/v1/exhibitions/4568?fields=id,title,image_id,alt_image_ids
+#Image Sizes
+TheÿIIIF Image API 2.0ÿ(opens new window)has a lot of options. However, we prefer to use it conservatively. As mentioned above, here's the URL pattern we use for most projects:
+https://www.artic.edu/iiif/2/{identifier}/full/843,/0/default.jpg
+We recommend usingÿ/full/843,/0/default.jpgÿbecause this is the most common size used by our website, so there's a good chance that the image has previously been requested and cached. If you use this pattern in your projects, it will make images load faster in your application and decrease load on our systems.
+TIP
+We don't mind if you hotlink to our images. Our images support CORS withÿAccess-Control-Allow-Origin: *ÿheaders?same as our API responses! However, please be aware that any image can get unpublished or replaced at any time.
+If you'd like to display the full image at smaller sizes, we recommend the following size increments, as these are likely to give you a cache hit as well:
+https://www.artic.edu/iiif/2/{identifier}/full/200,/0/default.jpg
+https://www.artic.edu/iiif/2/{identifier}/full/400,/0/default.jpg
+https://www.artic.edu/iiif/2/{identifier}/full/600,/0/default.jpg
+https://www.artic.edu/iiif/2/{identifier}/full/843,/0/default.jpg
+If you are accessing public domain images, you may also use the following pattern for larger images:
+https://www.artic.edu/iiif/2/{identifier}/full/1686,/0/default.jpg
+However, we still recommend usingÿ843ÿinstead unless there's a clear need forÿ1686.
+Why the strange number?843px wide? This number is related to certainÿguidelines for the use of copyrighted materialsÿ(opens new window)within the museum field. Over time, it became the most common dimension used by our applications, so it is the size we continue to recommend.
+#IIIF Manifests
+We also offer IIIF Manifests for all of our public domain artworks. A manifest is a resource defined by theÿIIIF Presentation APIÿ(opens new window). Each manifest contains artwork metadata?such as title, artist name, and copyright info?alongside a list of images associated with that artwork.
+You can access the manifest by appendingÿ/manifest.jsonÿafter the identifier in an artwork detail endpoint. For example, here is the manifest forÿThe Great Waveÿ(opens new window):
+https://api.artic.edu/api/v1/artworks/24645/manifest.json
+These IIIF manifests do not contain any data that cannot be found elsewhere in our API. But because they follow a standardized API, they can be used with IIIF-compliant tools, such asÿMiradorÿ(opens new window). For a fun example, try pasting the URL above into theÿGetty's Animal Crossing Art Generatorÿ(opens new window)?and scroll up to see the result!
+#Image Dumps
+Unfortunately, we cannot offer image dumps at this time. We are exploring that possibility.
+For now, you may scrape images from our IIIF Image API. We ask that you please follow our guidelines forÿscraping imagesÿif you decide to do so.
+#Scraping Images
+Generally, we prefer that you hotlink to our images, rather than scraping them. Scraping images can put unnecessary strain on our systems. That said, we understand that many use-cases require images to be stored locally.
+If you'd like to scrape images from our IIIF API, please follow these guidelines:
+* Scrape one image at a time?do not use multiple threads or processes!
+* Consider adding a delay of 1 second between each image download
+* Use the following URL pattern to download ourÿmost common image size:
+* https://www.artic.edu/iiif/2/{identifier}/full/843,/0/default.jpg
+#Copyright
+For information about copyright, please see theÿImage Licensingÿ(opens new window)andÿTermsÿ(opens new window)pages on our website. We defer to those resources in all legal respects.
+From a developer's perspective, we recommend only using images from artworks that are tagged as public domain. When querying for artworks, you can filter by public domain status like so:
+https://api.artic.edu/api/v1/artworks/search?query[term][is_public_domain]=true&limit=0
+To get the full list of artworks that are in the public domain, you will need to download ourÿdata dumpsÿand perform the filtering locally.
+Please note that you may encounter images that are not public domain via ourÿIIIF Image API. It is up to you to determine whether or not you are allowed to use these images for your use-case and to obtain any necessary permissions.
+#GENERAL INFORMATION
+#Authentication
+You may access our API without authentication. Anonymous users are throttled to 60 requests per minute. (Each IP counts as a separate user.) If you are working on an application that needs to exceed this restriction, please get in touch with us atÿengineering@artic.edu.
+Please useÿHTTPSÿ(opens new window)to access our API. To support legacy applications, our API is currently accessible via both HTTP and HTTPS, but HTTP access will be removed in the future.
+Lastly, consider adding aÿAIC-User-Agentÿheader with the name of your project and a contact email to your API requests. For example:
+curl 'https://api.artic.edu/api/v1/artworks/24645' \
+--header 'AIC-User-Agent: aic-bash (engineering@artic.edu)'
+We ask that you do so as aÿmatter of courtesyÿ(opens new window). If we see an application using a disproportionate amount of system resources, this gives us an avenue to reach out and work with you to optimize your queries.
+TIP
+WhyÿAIC-User-Agent? Because modifying theÿUser-Agentÿheader isÿforbidden by some browsersÿ(opens new window). We are using theÿAIC-ÿnamespace to reduce potential conflicts with other applications (RFC 6648ÿ(opens new window)).
+#Pagination
+Listing and search endpoints are paginated. We show 12 records per page by default. Pagination can be controlled via the following query parameters:
+* pageÿto request a specific page of results (1-based, default: 1)
+* limitÿto set how many records each page should return (0-based, default: 12)
+Example:ÿhttps://api.artic.edu/api/v1/artists?page=2&limit=10(opens new window)
+For performance reasons,ÿlimitÿcannot exceed 100. Additionally, you cannot request more than 10,000 records from a single search query through any combination ofÿlimitÿandÿpage. For example:
+* Success:ÿhttps://api.artic.edu/api/v1/artists/search?limit=100&page=100(opens new window)
+* Error:ÿhttps://api.artic.edu/api/v1/artists/search?limit=100&page=101(opens new window)
+Generally, we ask that you avoid scraping our API. If you want to filter and scrape our search results, but the number of results is greater than 10,000, you won't be able to scrape them fully. Instead, we recommend that you download ourÿdata dumpsÿand perform your filtering locally.
+Occasionally, it might be useful to check the total number of results without retrieving any data. Our API supports this by allowing you to make a request withÿlimit=0. For example, checkÿpagination.totalÿof this query to see the number of public domain artworks in our API:
+https://api.artic.edu/api/v1/artworks/search?query[term][is_public_domain]=true&limit=0(opens new window)
+All paginated endpoints include aÿpaginationÿblock in their responses:
+{
+    "pagination": {
+        "total": 112773,
+        "limit": 12,
+        "offset": 24,  // 0-based
+        "current_page": 3, // 1-based
+        "total_pages": 9398,
+        "prev_url": "https://api.artic.edu/api/v1/artworks?page=2&limit=12",
+        "next_url": "https://api.artic.edu/api/v1/artworks?page=4&limit=12"
+    },
+    "data": [
+        // ...
+    ]
+}
+#ENDPOINTS
+#Collections
+#Artworks
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /artworks
+A list of all artworks sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+* includeÿ- A comma-separated list of subresource to embed in the returned resources. Available options are:
+o artist_pivots
+o dates
+o place_pivots
+o sites
+Example request: https://api.artic.edu/api/v1/artworks?limit=2
+#GET /artworks/search
+Search artworks data in the aggregator. Artworks in the groups of essentials are boosted so they'll show up higher in results.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/artworks/search?q=monet
+#GET /artworks/{id}
+A single artwork by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/artworks/4
+#GET /artworks/{id}/manifest[.json]
+A representation of this artwork in the IIIF Presentation API format.
+Example request: https://api.artic.edu/api/v1/artworks/4/manifest.json
+#Agents
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /agents
+A list of all agents sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/agents?limit=2
+#GET /agents/search
+Search agents data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/agents/search
+#GET /agents/{id}
+A single agent by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/agents/2
+#Places
+The data in this response is licensed under a Creative Commons Attribution 4.0 Generic License (CC-By) and the Terms and Conditions ofÿartic.eduÿ(opens new window). Contains information from the J. Paul Getty Trust, Getty Research Institute, the Getty Thesaurus of Geographic Names, which is made available under the ODC Attribution License.
+#GET /places
+A list of all places sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/places?limit=2
+#GET /places/search
+Search places data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/places/search
+#GET /places/{id}
+A single place by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/places/-2147483613
+#Galleries
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /galleries
+A list of all galleries sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/galleries?limit=2
+#GET /galleries/search
+Search galleries data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/galleries/search
+#GET /galleries/{id}
+A single gallery by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/galleries/2
+#Exhibitions
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /exhibitions
+A list of all exhibitions sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+* includeÿ- A comma-separated list of subresource to embed in the returned resources. Available options are:
+o artworks
+o sites
+Example request: https://api.artic.edu/api/v1/exhibitions?limit=2
+#GET /exhibitions/search
+Search exhibitions data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/exhibitions/search
+#GET /exhibitions/{id}
+A single exhibition by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/exhibitions/5
+#Agent Types
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /agent-types
+A list of all agent-types sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/agent-types?limit=2
+#GET /agent-types/{id}
+A single agent-type by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/agent-types/1
+#Agent Roles
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /agent-roles
+A list of all agent-roles sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/agent-roles?limit=2
+#GET /agent-roles/{id}
+A single agent-role by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/agent-roles/1
+#Artwork Place Qualifiers
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /artwork-place-qualifiers
+A list of all artwork-place-qualifiers sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/artwork-place-qualifiers?limit=2
+#GET /artwork-place-qualifiers/{id}
+A single artwork-place-qualifier by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/artwork-place-qualifiers/1
+#Artwork Date Qualifiers
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /artwork-date-qualifiers
+A list of all artwork-date-qualifiers sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/artwork-date-qualifiers?limit=2
+#GET /artwork-date-qualifiers/{id}
+A single artwork-date-qualifier by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/artwork-date-qualifiers/1
+#Artwork Types
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /artwork-types
+A list of all artwork-types sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/artwork-types?limit=2
+#GET /artwork-types/{id}
+A single artwork-type by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/artwork-types/1
+#Category Terms
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /category-terms
+A list of all category-terms sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/category-terms?limit=2
+#GET /category-terms/search
+Search category-terms data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/category-terms/search
+#GET /category-terms/{id}
+A single category-term by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/category-terms/PC-1
+#Images
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /images
+A list of all images sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/images?limit=2
+#GET /images/search
+Search images data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/images/search
+#GET /images/{id}
+A single image by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/images/0691a394-853c-20f5-4237-d07270e130a5
+#Videos
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /videos
+A list of all videos sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/videos?limit=2
+#GET /videos/search
+Search videos data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/videos/search
+#GET /videos/{id}
+A single video by the given identifier. {id} is the identifier from our collections management system.
+#Sounds
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /sounds
+A list of all sounds sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/sounds?limit=2
+#GET /sounds/search
+Search sounds data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/sounds/search
+#GET /sounds/{id}
+A single sound by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/sounds/f38522ed-05e8-8761-953e-77d965c87ccf
+#Texts
+The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions ofÿartic.eduÿ(opens new window).
+#GET /texts
+A list of all texts sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/texts?limit=2
+#GET /texts/search
+Search texts data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/texts/search
+#GET /texts/{id}
+A single text by the given identifier. {id} is the identifier from our collections management system.
+Example request: https://api.artic.edu/api/v1/texts/46298023-ac4e-605c-3020-871b59e67de6
+#Shop
+#Products
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /products
+A list of all products sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/products?limit=2
+#GET /products/search
+Search products data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/products/search
+#GET /products/{id}
+A single product by the given identifier.
+Example request: https://api.artic.edu/api/v1/products/245285
+#Mobile
+#Tours
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /tours
+A list of all tours sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+* includeÿ- A comma-separated list of subresource to embed in the returned resources. Available options are:
+o tour_stops
+Example request: https://api.artic.edu/api/v1/tours?limit=2
+#GET /tours/search
+Search tours data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/tours/search
+#GET /tours/{id}
+A single tour by the given identifier.
+Example request: https://api.artic.edu/api/v1/tours/1000
+#Mobile Sounds
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /mobile-sounds
+A list of all mobile-sounds sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/mobile-sounds?limit=2
+#GET /mobile-sounds/search
+Search mobile-sounds data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/mobile-sounds/search
+#GET /mobile-sounds/{id}
+A single mobile-sound by the given identifier.
+Example request: https://api.artic.edu/api/v1/mobile-sounds/226
+#Digital Scholarly Catalogs
+#Publications
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /publications
+A list of all publications sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/publications?limit=2
+#GET /publications/search
+Search publications data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/publications/search
+#GET /publications/{id}
+A single publication by the given identifier.
+Example request: https://api.artic.edu/api/v1/publications/2
+#Sections
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /sections
+A list of all sections sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/sections?limit=2
+#GET /sections/search
+Search sections data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/sections/search
+#GET /sections/{id}
+A single section by the given identifier.
+Example request: https://api.artic.edu/api/v1/sections/18
+#Static Archive
+#Sites
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /sites
+A list of all sites sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+* includeÿ- A comma-separated list of subresource to embed in the returned resources. Available options are:
+o artworks
+Example request: https://api.artic.edu/api/v1/sites?limit=2
+#GET /sites/search
+Search sites data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/sites/search
+#GET /sites/{id}
+A single site by the given identifier.
+Example request: https://api.artic.edu/api/v1/sites/1
+#Website
+#Events
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /events
+A list of all events sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/events?limit=2
+#GET /events/search
+Search events data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/events/search
+#GET /events/{id}
+A single event by the given identifier.
+Example request: https://api.artic.edu/api/v1/events/4
+#Event Occurrences
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /event-occurrences
+A list of all event-occurrences sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/event-occurrences?limit=2
+#GET /event-occurrences/search
+Search event-occurrences data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/event-occurrences/search
+#GET /event-occurrences/{id}
+A single event-occurrence by the given identifier.
+Example request: https://api.artic.edu/api/v1/event-occurrences/000ee5de-6c64-5c74-86dd-5a55153f6995
+#Event Programs
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /event-programs
+A list of all event-programs sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/event-programs?limit=2
+#GET /event-programs/search
+Search event-programs data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/event-programs/search
+#GET /event-programs/{id}
+A single event-program by the given identifier.
+Example request: https://api.artic.edu/api/v1/event-programs/3
+#Articles
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /articles
+A list of all articles sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/articles?limit=2
+#GET /articles/search
+Search articles data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/articles/search
+#GET /articles/{id}
+A single article by the given identifier.
+Example request: https://api.artic.edu/api/v1/articles/14
+#Highlights
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /highlights
+A list of all highlights sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/highlights?limit=2
+#GET /highlights/search
+Search highlights data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/highlights/search
+#GET /highlights/{id}
+A single highlight by the given identifier.
+Example request: https://api.artic.edu/api/v1/highlights/3
+#Static Pages
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /static-pages
+A list of all static-pages sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/static-pages?limit=2
+#GET /static-pages/search
+Search static-pages data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/static-pages/search
+#GET /static-pages/{id}
+A single static-page by the given identifier.
+#Generic Pages
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /generic-pages
+A list of all generic-pages sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/generic-pages?limit=2
+#GET /generic-pages/search
+Search generic-pages data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/generic-pages/search
+#GET /generic-pages/{id}
+A single generic-page by the given identifier.
+Example request: https://api.artic.edu/api/v1/generic-pages/2
+#Press Releases
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /press-releases
+A list of all press-releases sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/press-releases?limit=2
+#GET /press-releases/search
+Search press-releases data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/press-releases/search
+#GET /press-releases/{id}
+A single press-release by the given identifier.
+Example request: https://api.artic.edu/api/v1/press-releases/1
+#Educator Resources
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /educator-resources
+A list of all educator-resources sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/educator-resources?limit=2
+#GET /educator-resources/search
+Search educator-resources data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/educator-resources/search
+#GET /educator-resources/{id}
+A single educator-resource by the given identifier.
+Example request: https://api.artic.edu/api/v1/educator-resources/7
+#Digital Catalogs
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /digital-catalogs
+A list of all digital-catalogs sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/digital-catalogs?limit=2
+#GET /digital-catalogs/search
+Search digital-catalogs data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/digital-catalogs/search
+#GET /digital-catalogs/{id}
+A single digital-catalog by the given identifier.
+Example request: https://api.artic.edu/api/v1/digital-catalogs/2
+#Digital Publication Sections
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /digital-publication-sections
+A list of all digital-publication-sections sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/digital-publication-sections?limit=2
+#GET /digital-publication-sections/search
+Search digital-publication-sections data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/digital-publication-sections/search
+#GET /digital-publication-sections/{id}
+A single digital-publication-section by the given identifier.
+#Printed Catalogs
+The data in this response may be protected by copyright, and other restrictions, of the Art Institute of Chicago and third parties. You may use this data for noncommercial educational and personal use and for "fair use" as authorized under law, provided that you also retain all copyright and other proprietary notices contained on the materials and cite the author and source of the materials.
+#GET /printed-catalogs
+A list of all printed-catalogs sorted by last updated date in descending order. For a description of all the fields included with this response, seeÿhere.
+#AVAILABLE PARAMETERS:
+* idsÿ- A comma-separated list of resource ids to retrieve
+* limitÿ- The number of resources to return per page
+* pageÿ- The page of resources to retrieve
+* fieldsÿ- A comma-separated list of fields to return per resource
+Example request: https://api.artic.edu/api/v1/printed-catalogs?limit=2
+#GET /printed-catalogs/search
+Search printed-catalogs data in the aggregator.
+#AVAILABLE PARAMETERS:
+* qÿ- Your search query
+* queryÿ- For complex queries, you can pass Elasticsearch domain syntax queries here
+* sortÿ- Used in conjunction withÿquery
+* fromÿ- Starting point of results. Pagination via Elasticsearch conventions
+* sizeÿ- Number of results to return. Pagination via Elasticsearch conventions
+* facetsÿ- A comma-separated list of 'count' aggregation facets to include in the results.
+Example request: https://api.artic.edu/api/v1/printed-catalogs/search
+#GET /printed-catalogs/{id}
+A single printed-catalog by the given identifier.
+#FIELDS
+#Collections
+#Artworks
+Represents a work of art in our collections. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* is_boostedÿbooleanÿ- Whether this document should be boosted in search
+* titleÿstringÿ- The name of this resource
+* alt_titlesÿarrayÿ- Alternate names for this work
+* thumbnailÿarrayÿ- Metadata about the image referenced byÿimage_id. Currently, all thumbnails are IIIF images. You must build your own image URLs using IIIF Image API conventions. See our API documentation for more details.
+* main_reference_numberÿstringÿ- Unique identifier assigned to the artwork upon acquisition
+* has_not_been_viewed_muchÿbooleanÿ- Whether the artwork hasn't been visited on our website very much
+* boost_rankÿnumberÿ- Manual indication of what rank this artwork should take in search results. Noncontiguous.
+* date_startÿnumberÿ- The year of the period of time associated with the creation of this work
+* date_endÿnumberÿ- The year of the period of time associated with the creation of this work
+* date_displayÿstringÿ- Readable, free-text description of the period of time associated with the creation of this work. This might include date terms like Dynasty, Era etc. Written by curators and editors in house style, and is the preferred field for display on websites and apps.
+* date_qualifier_titleÿstringÿ- Readable, text qualifer to the dates provided for this record.
+* date_qualifier_idÿintegerÿ- Unique identifier of the qualifer to the dates provided for this record.
+* artist_displayÿstringÿ- Readable description of the creator of this work. Includes artist names, nationality and lifespan dates
+* place_of_originÿstringÿ- The location where the creation, design, or production of the work took place, or the original location of the work
+* dimensionsÿstringÿ- The size, shape, scale, and dimensions of the work. May include multiple dimensions like overall, frame, or dimension for each section of a work. Free-form text formatted in a house style.
+* dimensions_detailÿobjectÿ- The height, width, depth, and/or diameter of each section of the work in centimeters
+* medium_displayÿstringÿ- The substances or materials used in the creation of a work
+* inscriptionsÿstringÿ- A description of distinguishing or identifying physical markings that are on the work
+* credit_lineÿstringÿ- Brief statement indicating how the work came into the collection
+* catalogue_displayÿstringÿ- Brief text listing all the catalogues raisonn‚s which include this work. This isn't an exhaustive list of publications where the work has been mentioned. For that, seeÿpublication_history.
+* publication_historyÿstringÿ- Bibliographic list of all the places this work has been published
+* exhibition_historyÿstringÿ- List of all the places this work has been exhibited
+* provenance_textÿstringÿ- Ownership/collecting history of the work. May include names of owners, dates, and possibly methods of transfer of ownership. Free-form text formatted in a house style.
+* editionÿtextÿ- Edition number if the work is one of many
+* publishing_verification_levelÿstringÿ- Indicator of how much metadata on the work in published. Web Basic is the least amount, Web Everything is the greatest.
+* internal_department_idÿnumberÿ- An internal department id we use for analytics. Does not correspond to departments on the website.
+* fiscal_yearÿnumberÿ- The fiscal year in which the work was acquired.
+* fiscal_year_deaccessionÿnumberÿ- The fiscal year in which the work was deaccessioned.
+* is_public_domainÿbooleanÿ- Whether the work is in the public domain, meaning it was created before copyrights existed or has left the copyright term
+* is_zoomableÿbooleanÿ- Whether images of the work are allowed to be displayed in a zoomable interface.
+* max_zoom_window_sizeÿnumberÿ- The maximum size of the window the image is allowed to be viewed in, in pixels.
+* copyright_noticeÿstringÿ- Statement notifying how the work is protected by copyright. Applies to the work itself, not image or other related assets.
+* has_multimedia_resourcesÿbooleanÿ- Whether this artwork has any associated microsites, digital publications, or documents tagged as multimedia
+* has_educational_resourcesÿbooleanÿ- Whether this artwork has any documents tagged as educational
+* has_advanced_imagingÿbooleanÿ- Whether this artwork is enhanced with 3D models, 360 image sequences, Mirador views, etc.
+* colorfulnessÿfloatÿ- Unbounded positive float representing an abstract measure of colorfulness.
+* colorÿobjectÿ- Dominant color of this artwork in HSL
+* latitudeÿnumberÿ- Latitude coordinate of the location of this work in our galleries
+* longitudeÿnumberÿ- Longitude coordinate of the location of this work in our galleries
+* latlonÿstringÿ- Latitude and longitude coordinates of the location of this work in our galleries
+* is_on_viewÿbooleanÿ- Whether the work is on display
+* on_loan_displayÿstringÿ- If an artwork is on loan, this contains details about the loan
+* gallery_titleÿstringÿ- The location of this work in our museum
+* gallery_idÿnumberÿ- Unique identifier of the location of this work in our museum
+* artwork_type_titleÿstringÿ- The kind of object or work (e.g. Painting, Sculpture, Book)
+* artwork_type_idÿnumberÿ- Unique identifier of the kind of object or work
+* department_titleÿstringÿ- Name of the curatorial department that this work belongs to
+* department_idÿnumberÿ- Unique identifier of the curatorial department that this work belongs to
+* artist_idÿintegerÿ- Unique identifier of the preferred artist/culture associated with this work
+* artist_titleÿstringÿ- Name of the preferred artist/culture associated with this work
+* alt_artist_idsÿarrayÿ- Unique identifiers of the non-preferred artists/cultures associated with this work
+* artist_idsÿintegerÿ- Unique identifier of all artist/cultures associated with this work
+* artist_titlesÿarrayÿ- Names of all artist/cultures associated with this work
+* category_idsÿarrayÿ- Unique identifiers of the categories this work is a part of
+* category_titlesÿarrayÿ- Names of the categories this artwork is a part of
+* term_titlesÿarrayÿ- The names of the taxonomy tags for this work
+* style_idÿstringÿ- Unique identifier of the preferred style term for this work
+* style_titleÿstringÿ- The name of the preferred style term for this work
+* alt_style_idsÿarrayÿ- Unique identifiers of all other non-preferred style terms for this work
+* style_idsÿarrayÿ- Unique identifiers of all style terms for this work
+* style_titlesÿarrayÿ- The names of all style terms related to this artwork
+* classification_idÿstringÿ- Unique identifier of the preferred classification term for this work
+* classification_titleÿstringÿ- The name of the preferred classification term for this work
+* alt_classification_idsÿarrayÿ- Unique identifiers of all other non-preferred classification terms for this work
+* classification_idsÿarrayÿ- Unique identifiers of all classification terms for this work
+* classification_titlesÿarrayÿ- The names of all classification terms related to this artwork
+* subject_idÿstringÿ- Unique identifier of the preferred subject term for this work
+* alt_subject_idsÿarrayÿ- Unique identifiers of all other non-preferred subject terms for this work
+* subject_idsÿarrayÿ- Unique identifiers of all subject terms for this work
+* subject_titlesÿarrayÿ- The names of all subject terms related to this artwork
+* material_idÿstringÿ- Unique identifier of the preferred material term for this work
+* alt_material_idsÿarrayÿ- Unique identifiers of all other non-preferred material terms for this work
+* material_idsÿarrayÿ- Unique identifiers of all material terms for this work
+* material_titlesÿarrayÿ- The names of all material terms related to this artwork
+* technique_idÿstringÿ- Unique identifier of the preferred technique term for this work
+* alt_technique_idsÿarrayÿ- Unique identifiers of all other non-preferred technique terms for this work
+* technique_idsÿarrayÿ- Unique identifiers of all technique terms for this work
+* technique_titlesÿarrayÿ- The names of all technique terms related to this artwork
+* theme_titlesÿarrayÿ- The names of all thematic publish categories related to this artwork
+* image_idÿuuidÿ- Unique identifier of the preferred image to use to represent this work
+* alt_image_idsÿarrayÿ- Unique identifiers of all non-preferred images of this work.
+* document_idsÿarrayÿ- Unique identifiers of assets that serve as documentation for this artwork
+* sound_idsÿuuidÿ- Unique identifiers of the audio about this work
+* video_idsÿuuidÿ- Unique identifiers of the videos about this work
+* text_idsÿuuidÿ- Unique identifiers of the texts about this work
+* section_idsÿarrayÿ- Unique identifiers of the digital publication chapters this work in included in
+* section_titlesÿarrayÿ- Names of the digital publication chapters this work is included in
+* site_idsÿarrayÿ- Unique identifiers of the microsites this work is a part of
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Agents
+Represents a person or organization. In the API, this includes artists. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* sort_titleÿstringÿ- Sortable name for this agent, typically with last name first.
+* alt_titlesÿarrayÿ- Alternate names for this agent
+* is_artistÿbooleanÿ- Whether the agent is an artist. Solely based on whether the agent is related to an artwork record.
+* birth_dateÿnumberÿ- The year this agent was born
+* death_dateÿnumberÿ- The year this agent died
+* descriptionÿstringÿ- A biographical description of the agent
+* ulan_idÿnumberÿ- Unique identifier of this agent in Getty's ULAN
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Places
+A room or hall that works of art are displayed in. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* tgn_idÿnumberÿ- Reconciled identifier of this object in the Getty's Thesauraus of Geographic Names (TGN)
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Galleries
+A room or hall that works of art are displayed in. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* latitudeÿnumberÿ- Latitude coordinate of the center of the room
+* longitudeÿnumberÿ- Longitude coordinate of the center of the room
+* tgn_idÿnumberÿ- Reconciled identifier of this object in the Getty's Thesauraus of Geographic Names (TGN)
+* is_closedÿbooleanÿ- Whether the gallery is currently closed
+* numberÿstringÿ- The gallery's room number. For "Gallery 100A", this would be "100A".
+* floorÿstringÿ- The level the gallery is on, e.g., 1, 2, 3, or LL
+* latlonÿstringÿ- Latitude and longitude coordinates of the center of the room
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Exhibitions
+An organized presentation and display of a selection of artworks. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* is_featuredÿbooleanÿ- Is this exhibition currently featured on our website?
+* short_descriptionÿstringÿ- Brief explanation of what this exhibition is
+* web_urlÿstringÿ- URL to this exhibition on our website
+* image_urlÿstringÿ- URL to the hero image from the website
+* statusÿstringÿ- Whether the exhibition is open or closed
+* aic_start_atÿISO 8601 date and timeÿ- Date the exhibition opened at the Art Institute of Chicago
+* aic_end_atÿISO 8601 date and timeÿ- Date the exhibition closed at the Art Institute of Chicago
+* gallery_idÿnumberÿ- Unique identifier of the gallery that mainly housed the exhibition
+* gallery_titleÿstringÿ- The name of the gallery that mainly housed the exhibition
+* artwork_idsÿarrayÿ- Unique identifiers of the artworks that were part of the exhibition
+* artwork_titlesÿarrayÿ- Names of the artworks that were part of the exhibition
+* artist_idsÿarrayÿ- Unique identifiers of the artist agent records representing who was shown in the exhibition
+* site_idsÿarrayÿ- Unique identifiers of the microsites this exhibition is a part of
+* image_idÿuuidÿ- Unique identifier of the preferred image to use to represent this exhibition
+* alt_image_idsÿarrayÿ- Unique identifiers of all non-preferred images of this exhibition.
+* document_idsÿarrayÿ- Unique identifiers of assets that serve as documentation for this exhibition
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Agent Types
+A kind of agent, e.g. Individual, Couple, School, Estate, Culture. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Agent Roles
+A qualifier for the relationship an agent may have to an artwork. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Artwork Place Qualifiers
+A qualifier for the relationship a place may have to an artwork. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Artwork Date Qualifiers
+A kind of date on at artwork, e.g., Made, Reconstructed, Published, etc. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Artwork Types
+A kind of object or work, e.g., Painting, Sculpture, Book, etc. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* aat_idÿintegerÿ- Identifier of reconciled (most similar) term in the Getty's Art and Architecture Thesaurus (AAT)
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Category Terms
+Tag-like classifications of artworks and other resources. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿkeywordÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* subtypeÿstringÿ- Takes one of the following values: classification, material, technique, style, subject, department, theme
+* parent_idÿstringÿ- Unique identifier of this category's parent
+* aat_idÿintegerÿ- Identifier of reconciled (most similar) term in the Getty's Art and Architecture Thesaurus (AAT)
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Images
+A pictorial representation of a collections resource, like an artwork, artist, exhibition, etc. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿkeywordÿ- Unique identifier of this resource. Taken from the source system.
+* lake_guidÿuuidÿ- Unique UUID of this resource in LAKE, our DAMS.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* typeÿstringÿ- Type always takes one of the following values: image, sound, text, video
+* alt_textÿstringÿ- Alternative text for the asset to describe it to people with low or no vision
+* contentÿstringÿ- Text of or URL to the contents of this asset
+* is_multimedia_resourceÿbooleanÿ- Whether this resource is considered to be multimedia
+* is_educational_resourceÿbooleanÿ- Whether this resource is considered to be educational
+* is_teacher_resourceÿbooleanÿ- Whether this resource is considered to be educational
+* credit_lineÿstringÿ- Asset-specific copyright information
+* content_e_tagÿstringÿ- Arbitrary unique identifier that changes when the binary file gets updated
+* iiif_urlÿurlÿ- IIIF URL of this image
+* widthÿnumberÿ- Native width of the image
+* heightÿnumberÿ- Native height of the image
+* lqipÿtextÿ- Low-quality image placeholder (LQIP). Currently a 5x5-constrained, base64-encoded GIF.
+* colorfulnessÿfloatÿ- Unbounded positive float representing an abstract measure of colorfulness.
+* colorÿobjectÿ- Dominant color of this image in HSL
+* fingerprintÿobjectÿ- Image hashes: aHash, dHash, pHash, wHash
+* ahashÿobjectÿ- Image hash generated using ahash algorithm with 64 boolean subfields
+* phashÿobjectÿ- Image hash generated using phash algorithm with 64 boolean subfields
+* artwork_idsÿarrayÿ- Unique identifiers of the artworks associated with this asset
+* artwork_titlesÿarrayÿ- Names of the artworks associated with this asset
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Videos
+A moving image representation of a collections resource, like an artwork, artist, exhibition, etc. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿkeywordÿ- Unique identifier of this resource. Taken from the source system.
+* lake_guidÿuuidÿ- Unique UUID of this resource in LAKE, our DAMS.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* typeÿstringÿ- Type always takes one of the following values: image, sound, text, video
+* alt_textÿstringÿ- Alternative text for the asset to describe it to people with low or no vision
+* contentÿstringÿ- Text of or URL to the contents of this asset
+* is_multimedia_resourceÿbooleanÿ- Whether this resource is considered to be multimedia
+* is_educational_resourceÿbooleanÿ- Whether this resource is considered to be educational
+* is_teacher_resourceÿbooleanÿ- Whether this resource is considered to be educational
+* credit_lineÿstringÿ- Asset-specific copyright information
+* content_e_tagÿstringÿ- Arbitrary unique identifier that changes when the binary file gets updated
+* artwork_idsÿarrayÿ- Unique identifiers of the artworks associated with this asset
+* artwork_titlesÿarrayÿ- Names of the artworks associated with this asset
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Sounds
+Audio that represents a collections resource, like an artwork, artist, exhibition, etc. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿkeywordÿ- Unique identifier of this resource. Taken from the source system.
+* lake_guidÿuuidÿ- Unique UUID of this resource in LAKE, our DAMS.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* typeÿstringÿ- Type always takes one of the following values: image, sound, text, video
+* alt_textÿstringÿ- Alternative text for the asset to describe it to people with low or no vision
+* contentÿstringÿ- Text of or URL to the contents of this asset
+* is_multimedia_resourceÿbooleanÿ- Whether this resource is considered to be multimedia
+* is_educational_resourceÿbooleanÿ- Whether this resource is considered to be educational
+* is_teacher_resourceÿbooleanÿ- Whether this resource is considered to be educational
+* credit_lineÿstringÿ- Asset-specific copyright information
+* content_e_tagÿstringÿ- Arbitrary unique identifier that changes when the binary file gets updated
+* artwork_idsÿarrayÿ- Unique identifiers of the artworks associated with this asset
+* artwork_titlesÿarrayÿ- Names of the artworks associated with this asset
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Texts
+Text that represents a collections resource, like an artwork, artist, exhibition, etc. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿkeywordÿ- Unique identifier of this resource. Taken from the source system.
+* lake_guidÿuuidÿ- Unique UUID of this resource in LAKE, our DAMS.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* typeÿstringÿ- Type always takes one of the following values: image, sound, text, video
+* alt_textÿstringÿ- Alternative text for the asset to describe it to people with low or no vision
+* contentÿstringÿ- Text of or URL to the contents of this asset
+* is_multimedia_resourceÿbooleanÿ- Whether this resource is considered to be multimedia
+* is_educational_resourceÿbooleanÿ- Whether this resource is considered to be educational
+* is_teacher_resourceÿbooleanÿ- Whether this resource is considered to be educational
+* credit_lineÿstringÿ- Asset-specific copyright information
+* content_e_tagÿstringÿ- Arbitrary unique identifier that changes when the binary file gets updated
+* artwork_idsÿarrayÿ- Unique identifiers of the artworks associated with this asset
+* artwork_titlesÿarrayÿ- Names of the artworks associated with this asset
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Shop
+#Products
+An item available for purchase in the museum shop. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* external_skuÿnumberÿ- Numeric product identification code of a machine-readable barcode, when the customer sku differs from our internal one
+* image_urlÿurlÿ- URL of an image for this product
+* web_urlÿurlÿ- URL of this product in the shop
+* descriptionÿstringÿ- Explanation of what this product is
+* price_displayÿstringÿ- Explanation of what this product is
+* min_compare_at_priceÿnumberÿ- Number indicating how much the least expensive variant of a product cost before a sale
+* max_compare_at_priceÿnumberÿ- Number indicating how much the most expensive variant of a product cost before a sale
+* min_current_priceÿnumberÿ- Number indicating how much the least expensive variant of a product costs right now
+* max_current_priceÿnumberÿ- Number indicating how much the most expensive variant of a product costs right now
+* artist_idsÿarrayÿ- Unique identifiers of the artists associated with this product
+* artwork_idsÿarrayÿ- Unique identifiers of the artworks associated with this product
+* exhibition_idsÿarrayÿ- Unique identifiers of the exhibitions associated with this product
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Mobile
+#Tours
+A collection of audio tour stops to form a tour. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* imageÿurlÿ- The main image for the tour
+* descriptionÿstringÿ- Explanation of what the tour is
+* introÿstringÿ- Text introducing the tour
+* weightÿnumberÿ- Number representing this tour's sort order
+* intro_linkÿurlÿ- Link to the audio file of the introduction
+* intro_transcriptÿstringÿ- Transcript of the introduction audio to the tour
+* artwork_titlesÿarrayÿ- Names of the artworks featured in this tour's tour stops
+* artist_titlesÿarrayÿ- Names of the artists of the artworks featured in this tour's tour stops
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Mobile Sounds
+The audio file for a stop on a tour. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- Name of this mobile audio file ? derived from the artwork and tour titles
+* web_urlÿurlÿ- URL to the audio file
+* transcriptÿstringÿ- Text transcription of the audio file
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Digital Scholarly Catalogs
+#Publications
+Represents an overall digital publication. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* web_urlÿstringÿ- URL to the publication
+* section_idsÿarrayÿ- Unique identifiers of the sections of this publication
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Sections
+Represents a chapter of publication. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿlongÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* web_urlÿstringÿ- URL to the section
+* accessionÿstringÿ- An accession number parsed from the title or tombstone
+* generic_page_idÿnumberÿ- Unique identifier of the page on the website that represents the publication this section belongs to
+* artwork_idÿnumberÿ- Unique identifier of the artwork with which this section is associated
+* publication_titleÿstringÿ- Name of the publication this section belongs to
+* publication_idÿnumberÿ- Unique identifier of the publication this section belongs to
+* contentÿstringÿ- Content of this section in plaintext
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Static Archive
+#Sites
+An archived static microsite. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* descriptionÿstringÿ- Explanation of what this site is
+* web_urlÿurlÿ- URL to this site
+* exhibition_idsÿarrayÿ- Unique identifier of the exhibitions this site is associated with
+* exhibition_titlesÿarrayÿ- Names of the exhibitions this site is associated with
+* artwork_idsÿarrayÿ- Unique identifiers of the artworks this site is associated with
+* artwork_titlesÿarrayÿ- Names of the artworks this site is associated with
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Website
+#Events
+An event on the website For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* title_displayÿstringÿ- The name of this event formatted with HTML (optional)
+* image_urlÿstringÿ- The URL of an image representing this page
+* hero_captionÿstringÿ- Text displayed with the hero image on the event
+* short_descriptionÿstringÿ- Brief description of the event
+* header_descriptionÿstringÿ- Brief description of the event displayed below the title
+* list_descriptionÿstringÿ- One-sentence description of the event displayed in listings
+* descriptionÿstringÿ- All copytext of the event
+* locationÿstringÿ- Where the event takes place
+* event_type_idÿnumberÿ- Unique identifier indicating the preferred type of this event
+* alt_event_type_idsÿarrayÿ- Unique identifiers indicating the alternate types of this event
+* audience_idÿnumberÿ- Unique identifier indicating the preferred audience for this event
+* alt_audience_idsÿarrayÿ- Unique identifiers indicating the alternate audiences for this event
+* program_idsÿarrayÿ- Unique identifiers indicating the programs this event is a part of
+* program_titlesÿarrayÿ- Titles of the programs this event is a part of
+* is_ticketedÿbooleanÿ- Whether a ticket is required to attend the event
+* rsvp_linkÿurlÿ- The URL to the sales site for this event
+* buy_button_textÿstringÿ- The text used on the ticket/registration button
+* buy_button_captionÿstringÿ- Additional text below the ticket/registration button
+* is_registration_requiredÿbooleanÿ- Whether registration is required to attend the event
+* is_member_exclusiveÿbooleanÿ- Whether the event is exclusive to members of the museum
+* is_sold_outÿbooleanÿ- Whether the event is sold out
+* is_freeÿbooleanÿ- Whether the event is free
+* is_admission_requiredÿbooleanÿ- Whether admission to the museum is required to attend this event
+* is_after_hoursÿbooleanÿ- Whether the event is to be held after the museum closes
+* is_virtual_eventÿbooleanÿ- Whether the event is being held virtually
+* start_dateÿISO 8601 date and timeÿ- The date the event begins
+* end_dateÿISO 8601 date and timeÿ- The date the event ends
+* start_timeÿstringÿ- The time the event starts
+* end_timeÿstringÿ- The time the event ends
+* date_displayÿstringÿ- A readable display of the event dates
+* door_timeÿstringÿ- The time the doors open for this event
+* layout_typeÿnumberÿ- Number indicating the type of layout this event page uses
+* slugÿstringÿ- A string used in the URL for this event
+* entranceÿstringÿ- Which entrance to use for this event
+* join_urlÿstringÿ- URL to the membership signup page via this event
+* survey_urlÿstringÿ- URL to the survey associated with this event
+* event_host_idÿnumberÿ- Unique identifier of the host (cf. event programs) that is presenting this event
+* event_host_titleÿstringÿ- Unique identifier of the host (cf. event programs) that is presenting this event
+* search_tagsÿarrayÿ- Editor-specified list of tags to aid in internal search
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Event Occurrences
+An occurrence of an event on the website For a description of all the endpoints available for this resource, seeÿhere.
+* idÿkeywordÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* event_idÿintegerÿ- Identifier of the master event of which this is an occurrence
+* short_descriptionÿstringÿ- Brief description of the event
+* descriptionÿstringÿ- Description of the event
+* image_urlÿstringÿ- The URL of an image representing this page
+* is_privateÿbooleanÿ- Whether the event is private. Private events should be omitted from listings.
+* start_atÿISO 8601 date and timeÿ- The date the event occurrence begins
+* end_atÿISO 8601 date and timeÿ- The date the event occurrence ends
+* locationÿstringÿ- Where the event takes place
+* button_urlÿurlÿ- The URL to the sales site or an RSVP link for this event
+* button_textÿstringÿ- The text used on the ticket/registration button
+* button_captionÿstringÿ- Additional text below the ticket/registration button
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Event Programs
+An event on the website For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* is_affiliate_groupÿbooleanÿ- Whether this program represents an affiliate group
+* is_event_hostÿbooleanÿ- Whether this program represents an event host
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Articles
+Article on the website For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* copyÿstringÿ- The text of the article
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Highlights
+Highlights are a grouping of artworks on the website For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* copyÿstringÿ- The text of the highlight description
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Static Pages
+Pages defined in the website code. For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* web_urlÿstringÿ- The URL to this page on our website
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Generic Pages
+A generic page on the website For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* web_urlÿstringÿ- The URL to this page on our website
+* copyÿstringÿ- The text of the page
+* search_tagsÿarrayÿ- Editor-specified list of tags to aid in internal search
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Press Releases
+A press release on the website For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* web_urlÿstringÿ- The URL to this page on our website
+* copyÿstringÿ- The text of the page
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Educator Resources
+An educator resource on the website For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* web_urlÿstringÿ- The URL to this page on our website
+* copyÿstringÿ- The text of the page
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Digital Catalogs
+A digital catalog on the website For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* web_urlÿstringÿ- The URL to this page on our website
+* copyÿstringÿ- The text of the page
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Digital Publication Sections
+A digital catalog on the website For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* web_urlÿstringÿ- The URL to this section on our website
+* copyÿstringÿ- The text of the section
+* author_displayÿstringÿ- A display-friendly text of the authors of this section
+* digital_publication_idÿnumberÿ- Unique identifier of the digital publication this section belongs to
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+#Printed Catalogs
+A printed catalog on the website For a description of all the endpoints available for this resource, seeÿhere.
+* idÿintegerÿ- Unique identifier of this resource. Taken from the source system.
+* api_modelÿstringÿ- REST API resource type or endpoint
+* api_linkÿstringÿ- REST API link for this resource
+* titleÿstringÿ- The name of this resource
+* web_urlÿstringÿ- The URL to this page on our website
+* copyÿstringÿ- The text of the page
+* suggest_autocomplete_boostedÿobjectÿ- Internal field to power theÿ/autocompleteendpoint. Do not use directly.
+* suggest_autocomplete_allÿobjectÿ- Internal field to power theÿ/autosuggestÿendpoint. Do not use directly.
+* source_updated_atÿISO 8601 date and timeÿ- Date and time the resource was updated in the source system
+* updated_atÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator database
+* timestampÿISO 8601 date and timeÿ- Date and time the record was updated in the aggregator search index
+
+
