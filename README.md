@@ -25,8 +25,6 @@ Explore the vast collection of artworks from the Art Institute of Chicago direct
 
 This diagram illustrates the application's data retrieval and rendering process:
 
-
-
 ```mermaid
 sequenceDiagram
     participant User
@@ -48,37 +46,36 @@ sequenceDiagram
     App->>API: GET /artworks?page={n}
     API-->>App: New JSON response
     App->>User: Updates artwork list
-```
+
 
 ### Process Explanation
 
 #### Initial Request
-- The iOS application requests artwork metadata from the Art Institute of Chicago's public API, specifying the desired page number for paginated results.
+The iOS application requests artwork metadata from the Art Institute of Chicago's public API, specifying the desired page number for paginated results.
 
 #### Metadata Response
-- The API returns a JSON payload containing:
-  - Artwork details (ID, title, artist information)
-  - Pagination metadata (current page, total pages)
-  - Image identifiers (`imageId`) for IIIF image service
+The API returns a JSON payload containing:
+- Artwork details (ID, title, artist information)
+- Pagination metadata (current page, total pages)
+- Image identifiers (`imageId`) for IIIF image service
 
 #### Image Retrieval
-- For each artwork with a valid `imageId`, the application constructs an IIIF-compliant URL and requests the high-resolution image from the IIIF Image API.
+For each artwork with a valid `imageId`, the application constructs an IIIF-compliant URL and requests the high-resolution image from the IIIF Image API.
 
 #### Image Delivery
-- The IIIF service responds with optimized image data, leveraging IIIF's image protocol for efficient delivery and dynamic sizing.
+The IIIF service responds with optimized image data, leveraging IIIF's image protocol for efficient delivery and dynamic sizing.
 
 #### Content Rendering
-- The application combines metadata and images to render:
-  - Paginated list view with artwork titles
-  - Detailed view with high-resolution images
-  - Navigation controls with real-time pagination status
+The application combines metadata and images to render:
+- Paginated list view with artwork titles
+- Detailed view with high-resolution images
+- Navigation controls with real-time pagination status
 
-### Technical Highlights
-
-- **Efficient Data Handling:** Metadata and image requests are decoupled for optimal performance
-- **Responsive Loading:** Images load asynchronously without blocking UI interactions
-- **Adaptive Image Sizing:** IIIF protocol delivers appropriately sized images for each device
-- **Persistence:** ViewModel maintains pagination state across navigation events
+#### Technical Highlights
+- **Efficient Data Handling:** Metadata and image requests are decoupled for optimal performance  
+- **Responsive Loading:** Images load asynchronously without blocking UI interactions  
+- **Adaptive Image Sizing:** IIIF protocol delivers appropriately sized images for each device  
+- **Persistence:** ViewModel maintains pagination state across navigation events  
 
 ---
 
