@@ -43,9 +43,9 @@ Explore the vast collection of artworks from the Art Institute of Chicago direct
 
 ---
 
-## Sequence Diagram 1: End-to-End Flow: Launch → View → Navigate
+## Diagram 1 - End-to-End App Flow: Launch → View → Navigate
 
-This diagram illustrates the application's data retrieval and rendering process:
+This Sequence Diagram illustrates the application's data retrieval and rendering process:
 
 ```mermaid
 sequenceDiagram
