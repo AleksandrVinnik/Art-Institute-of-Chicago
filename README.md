@@ -81,7 +81,9 @@ sequenceDiagram
 - App parses JSON into `Artwork` model objects  
 - Displays artwork titles in list view with pagination status  
 
-[![1. Application Launch Phase](Images/1.%20Application%20Launch%20Phase.PNG)](1.%20Application%20Launch%20Phase.PNG)
+<a href="Images/1.%20Application%20Launch%20Phase.PNG">
+  <img src="Images/1.%20Application%20Launch%20Phase.PNG" alt="1. Application Launch Phase" width="600"/>
+</a>
 
 #### 2️⃣ Artwork Selection Phase
 
