@@ -9,21 +9,22 @@ Explore the vast collection of artworks from the Art Institute of Chicago direct
 <div align="center">
 
   <a href="Images/3. Jumping to a specific page and Scrolling down.PNG">
-    <img src="Images/Images/3.%20Jumping%20to%20a%20specific%20page%20and%20Scrolling%20down.PNG" alt="Images/3.%20Jumping%20to%20a%20specific%20page%20and%20Scrolling%20down.PNG" width="200"/>
+    <img src="Images/3. Jumping to a specific page and Scrolling down.PNG" alt="3. Application Launch Phase" width="200"/>
   </a>
   
   <a href="Images/2. View Artwork Details - Image and Title.PNG">
-    <img src="Images/2.%20View%20Artwork%20Details%20-%20Image%20and%20Title.PNG" alt="Images/2.%20View%20Artwork%20Details%20-%20Image%20and%20Title.PNG" width="200"/>
+    <img src="Images/2. View Artwork Details - Image and Title.PNG" alt="2. Artwork Selection Phase" width="200"/>
   </a>
   
-    <a href="Images/2.1. View Artwork Details - Image and Title.PNG">
-    <img src="Images/2.1.%20View%20Artwork%20Details%20-%20Image%20and%20Title.PNG" alt="Images/2.1.%20View%20Artwork%20Details%20-%20Image%20and%20Title.PNG" width="200"/>
+  <a href="Images/2. View Artwork Details - Image and Title.PNG">
+    <img src="Images/2.1. View Artwork Details - Image and Title.PNG" alt="2.1. View Artwork Details - Image and Title.PNG" width="200"/>
   </a>
   
-  <a href="Images/0.%20App%20Preview%20Detailed%20Artwork.PNG">
-  <img src="Images/0.%20App%20Preview%20Detailed%20Artwork.PNG" alt="Images/0.%20App%20Preview%20Detailed%20Artwork.PNG" width="200"/>
+  <a href="Images/0. App Preview Detailed Artwork.PNG">
+    <img src="Images/0. App Preview Detailed Artwork.PNG" alt="0. App Preview Detailed Artwork.PNG" width="200"/>
   </a>
   
+
 </div>
 
 
