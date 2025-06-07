@@ -3,9 +3,11 @@
 ![Swift 5.9](https://img.shields.io/badge/Swift-5.9-orange.svg)  
 ![Platform iOS](https://img.shields.io/badge/platform-iOS-blue.svg)
 
-
-
 Explore the vast collection of artworks from the Art Institute of Chicago directly on your iOS device. This SwiftUI application provides a seamless browsing experience with paginated loading and detailed artwork views using the museum's public API.
+
+<a href="Images/1.%20Application%20Launch%20Phase.PNG">
+  <img src="Images/0.%20App%20Preview%20Detailed%20Artwork.PNG" alt="0.%20App%20Preview%20Detailed%20Artwork.PNG" width="200"/>
+</a>
 
 ---
 
