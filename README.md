@@ -58,18 +58,32 @@ sequenceDiagram
     App->>User: 11. Display artwork details<br>▸ High-res image<br>▸ Title<br>▸ Navigation controls
     deactivate App
     
-    Note over User,IIIF: 3️⃣ Page Navigation
-    User->>App: 12. Enters page number N or Scroll Down
-    activate App
-    App->>App: 13. Validate input: 1 ≤ N ≤ totalPages
-    App->>API: 14. GET /artworks?page=N
-    activate API
-    API-->>App: 15. New JSON response
-    deactivate API
+    Note over User,IIIF: 3️⃣ Page Navigation (Two Paths)
     
-    App->>App: 16. Clear current list<br>17. Parse new data
-    App->>User: 18. Update artwork list<br>▸ New artworks<br>▸ Updated pagination
-    deactivate App
+    alt Jump to Specific Page
+        User->>App: 12. Enters page number N
+        activate App
+        App->>App: 13. Validate input: 1 ≤ N ≤ totalPages
+        App->>App: 14. Clear current artworks list
+        App->>API: 15. GET /artworks?page=N
+        activate API
+        API-->>App: 16. New JSON response
+        deactivate API
+        App->>App: 17. Parse new data
+        App->>User: 18. Display new artworks<br>▸ Only page N content<br>▸ Updated pagination
+        deactivate App
+    
+    else Scroll Down (Infinite Scroll)
+        User->>App: 19. Scrolls to bottom
+        activate App
+        App->>API: 20. GET /artworks?page=(current+1)
+        activate API
+        API-->>App: 21. New JSON response
+        deactivate API
+        App->>App: 22. Append new data to existing list
+        App->>User: 23. Show additional artworks<br>▸ Combined list<br>▸ Updated pagination
+        deactivate App
+    end
 ```
 ### 📲 Processing Steps Breakdown
 
@@ -99,15 +113,31 @@ sequenceDiagram
 </a>
 
 
-#### 3️⃣ Page Navigation Phase
+#### 3️⃣ Page Navigation Phase (Dual Mode)
 
-- User enters specific page number  
-- App validates page number against total pages  
-- Sends new API request for specified page  
-- API returns new set of artworks  
-- App clears current artwork list  
-- Parses new response into models  
-- Updates UI with new artworks and pagination info  
+**🔢 Jump to Specific Page**  
+- User enters specific page number (N)  
+- App validates: `1 ≤ N ≤ totalPages`  
+- **Clears current artworks list**  
+- Requests page N from API  
+- Receives new set of artworks  
+- Parses response into fresh models  
+- **Displays only page N content**  
+- Updates pagination info  
+
+**🔽 Infinite Scroll (Append Mode)**  
+- User scrolls to bottom of list  
+- App automatically requests next page (`currentPage + 1`)  
+- Receives additional artworks from API  
+- **Appends new artworks to existing list**  
+- **Maintains all previously loaded content**  
+- Updates pagination info  
+
+**Key Differences:**  
+| Action          | Artwork List Behavior | Page Handling          | UI Update               |
+|-----------------|-----------------------|------------------------|-------------------------|
+| **Jump to Page**| 🔴 Cleared            | Specific page (N)      | Fresh content only      |
+| **Scroll Down** | 🟢 Appended           | Next page (current+1)  | Combined content        |
 
 <a href="Images/3. Jumping to a specific page and Scrolling down.PNG">
   <img src="Images/3. Jumping to a specific page and Scrolling down.PNG" alt="3. Application Launch Phase" width="300"/>
