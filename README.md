@@ -27,55 +27,125 @@ This diagram illustrates the application's data retrieval and rendering process:
 
 ```mermaid
 sequenceDiagram
-    participant User
-    participant App as iOS App
-    participant API as Art Institute API
-    participant IIIF as IIIF Image API
+    participant User as 👤 User
+    participant App as 📱 iOS App
+    participant API as 🖼️ Art Institute API
+    participant IIIF as 🖌️ IIIF Image API
     
+    Note over User,IIIF: 1️⃣ Application Launch
     User->>App: Launches application
-    App->>API: GET /artworks?page=1
-    API-->>App: JSON response (artwork metadata)
-    App->>User: Displays artwork list
+    activate App
+    App->>API: 1. GET /artworks?page=1
+    activate API
+    API-->>App: 2. JSON response<br>(artwork metadata + pagination)
+    deactivate API
     
-    User->>App: Selects artwork from list
-    App->>IIIF: GET /iiif/2/{imageId}/full/843,/0/default.jpg
-    IIIF-->>App: Image data
-    App->>User: Displays artwork details with image
+    App->>App: 3. Parse JSON → Artwork models
+    App->>App: 4. Cache metadata
+    App->>User: 5. Display artwork list<br>▸ Titles only<br>▸ Pagination status
+    deactivate App
     
-    User->>App: Enters page number and taps "Go"
-    App->>API: GET /artworks?page={n}
-    API-->>App: New JSON response
-    App->>User: Updates artwork list
+    Note over User,IIIF: 2️⃣ Artwork Selection
+    User->>App: 6. Selects artwork from list
+    activate App
+    App->>App: 7. Retrieve imageId: {imageId}
+    App->>IIIF: 8. GET /iiif/2/{imageId}/full/843,/0/default.jpg
+    activate IIIF
+    IIIF-->>App: 9. Image data (JPEG)
+    deactivate IIIF
+    
+    App->>App: 10. Decode image
+    App->>User: 11. Display artwork details<br>▸ High-res image<br>▸ Title<br>▸ Navigation controls
+    deactivate App
+    
+    Note over User,IIIF: 3️⃣ Page Navigation
+    User->>App: 12. Enters page number N
+    activate App
+    App->>App: 13. Validate input: 1 ≤ N ≤ totalPages
+    App->>API: 14. GET /artworks?page=N
+    activate API
+    API-->>App: 15. New JSON response
+    deactivate API
+    
+    App->>App: 16. Clear current list<br>17. Parse new data
+    App->>User: 18. Update artwork list<br>▸ New artworks<br>▸ Updated pagination
+    deactivate App
 ```
+### 📲 Processing Steps Breakdown
 
-### Process Explanation
+#### 1️⃣ Application Launch Phase
+
+- User launches iOS application  
+- App sends API request for first page of artworks  
+- API returns JSON with metadata and pagination info  
+- App parses JSON into `Artwork` model objects  
+- Displays artwork titles in list view with pagination status  
+
+#### 2️⃣ Artwork Selection Phase
+
+- User selects specific artwork from list  
+- App retrieves image identifier (`imageId`) from model  
+- Constructs IIIF URL and requests high-resolution image  
+- IIIF server returns optimized JPEG image data  
+- App decodes image data  
+- Displays detail view with image, title, and navigation controls  
+
+#### 3️⃣ Page Navigation Phase
+
+- User enters specific page number  
+- App validates page number against total pages  
+- Sends new API request for specified page  
+- API returns new set of artworks  
+- App clears current artwork list  
+- Parses new response into models  
+- Updates UI with new artworks and pagination info  
+
+---
+
+### 🔧 Key Technical Details
+
+- **Image Optimization:** IIIF protocol delivers exactly sized images (843px width)  
+- **Data Caching:** Artwork metadata cached locally after first fetch  
+- **Input Validation:** Page numbers validated before API requests  
+- **Efficient Rendering:** SwiftUI updates only changed elements in list  
+- **Error Handling:** Missing images display fallback text  
+- **Responsive UI:** Loading states shown during network operations  
+
+---
+
+### 🔍 Process Explanation (Overview)
 
 #### Initial Request
-The iOS application requests artwork metadata from the Art Institute of Chicago's public API, specifying the desired page number for paginated results.
+The iOS application requests artwork metadata from the Art Institute of Chicago’s API with a specified page number for paginated results.
 
 #### Metadata Response
 The API returns a JSON payload containing:
-- Artwork details (ID, title, artist information)
-- Pagination metadata (current page, total pages)
-- Image identifiers (`imageId`) for IIIF image service
+- Artwork details (ID, title, artist information)  
+- Pagination metadata (current page, total pages)  
+- Image identifiers (`imageId`) for IIIF image service  
 
 #### Image Retrieval
-For each artwork with a valid `imageId`, the application constructs an IIIF-compliant URL and requests the high-resolution image from the IIIF Image API.
+For each artwork with a valid `imageId`, the app constructs an IIIF-compliant URL and requests the high-resolution image from the IIIF Image API.
 
 #### Image Delivery
-The IIIF service responds with optimized image data, leveraging IIIF's image protocol for efficient delivery and dynamic sizing.
+The IIIF service responds with optimized image data, using IIIF's protocol for efficient delivery and dynamic sizing.
 
 #### Content Rendering
-The application combines metadata and images to render:
-- Paginated list view with artwork titles
-- Detailed view with high-resolution images
-- Navigation controls with real-time pagination status
+The app combines metadata and images to render:
+- Paginated list view with artwork titles  
+- Detail view with high-resolution images  
+- Navigation controls with real-time pagination status  
 
-#### Technical Highlights
-- **Efficient Data Handling:** Metadata and image requests are decoupled for optimal performance  
-- **Responsive Loading:** Images load asynchronously without blocking UI interactions  
-- **Adaptive Image Sizing:** IIIF protocol delivers appropriately sized images for each device  
-- **Persistence:** ViewModel maintains pagination state across navigation events  
+---
+
+## 💡 Technical Highlights
+
+- **Efficient Data Handling:** Metadata and image requests are decoupled for better performance  
+- **Responsive Loading:** Images load asynchronously without blocking the UI  
+- **Adaptive Image Sizing:** IIIF protocol delivers optimal image size for the device  
+- **Persistence:** ViewModel retains pagination state across user navigation  
+
+
 
 ---
 
