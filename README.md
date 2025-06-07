@@ -132,8 +132,8 @@ sequenceDiagram
 - Displays detail view with image, title, and navigation controls  
 
 <div align="center">
-    <a href="Images/2. View Artwork Details - Image and Title.PNG">
-      <img src="Images/2. View Artwork Details - Image and Title.PNG" alt="2. Artwork Selection Phase" width="300"/>
+    <a href="Images/2.2. View Artwork Details - Image and Title.PNG">
+      <img src="Images/2.2. View Artwork Details - Image and Title.PNG" alt="2.2. Artwork Selection Phase" width="300"/>
     </a>
 </div>
 
