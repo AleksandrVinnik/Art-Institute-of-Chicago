@@ -34,7 +34,7 @@ struct ContentView: View {
                     if viewModel.currentPage < viewModel.totalPages {
                         ProgressView()
                             .onAppear {
-                                viewModel.fetchArtwork(page: viewModel.currentPage + 1)
+                                viewModel.fetchArtwork()
                             }
                     }
                 }
@@ -44,7 +44,7 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            viewModel.fetchArtwork()
+            viewModel.fetchArtwork(page: 1)
         }
     }
 }
