@@ -115,7 +115,7 @@ sequenceDiagram
 
 #### 3️⃣ Page Navigation Phase (Dual Mode)
 
-**🔢 Jump to Specific Page**  
+##### **🔢 Jump to Specific Page**  
 - User enters specific page number (N)  
 - App validates: `1 ≤ N ≤ totalPages`  
 - **Clears current artworks list**  
@@ -125,7 +125,7 @@ sequenceDiagram
 - **Displays only page N content**  
 - Updates pagination info  
 
-**🔽 Infinite Scroll (Append Mode)**  
+##### **🔽 Infinite Scroll (Append Mode)**  
 - User scrolls to bottom of list  
 - App automatically requests next page (`currentPage + 1`)  
 - Receives additional artworks from API  
@@ -133,7 +133,7 @@ sequenceDiagram
 - **Maintains all previously loaded content**  
 - Updates pagination info  
 
-**Key Differences:**  
+##### **Key Differences:**  
 | Action          | Artwork List Behavior | Page Handling          | UI Update               |
 |-----------------|-----------------------|------------------------|-------------------------|
 | **Jump to Page**| 🔴 Cleared            | Specific page (N)      | Fresh content only      |
