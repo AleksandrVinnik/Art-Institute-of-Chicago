@@ -81,6 +81,8 @@ sequenceDiagram
 - App parses JSON into `Artwork` model objects  
 - Displays artwork titles in list view with pagination status  
 
+[![1. Application Launch Phase](Images/1.%20Application%20Launch%20Phase.PNG)](1.%20Application%20Launch%20Phase.PNG)
+
 #### 2️⃣ Artwork Selection Phase
 
 - User selects specific artwork from list  
@@ -89,6 +91,8 @@ sequenceDiagram
 - IIIF server returns optimized JPEG image data  
 - App decodes image data  
 - Displays detail view with image, title, and navigation controls  
+
+[![2. Artwork Selection Phase](Images/2.%20View%20Artwork%20Details%20-%20Image%20and%20Title.PNG)](2.%20View%20Artwork%20Details%20-%20Image%20and%20Title.PNG)
 
 #### 3️⃣ Page Navigation Phase
 
@@ -99,6 +103,8 @@ sequenceDiagram
 - App clears current artwork list  
 - Parses new response into models  
 - Updates UI with new artworks and pagination info  
+
+[![3. Application Launch Phase](Images/3.%20Jumping%20to%20a%20specific%20page%20and%20Scrolling%20down.PNG)](3.%20Jumping%20to%20a%20specific%20page%20and%20Scrolling%20down.PNG)
 
 ---
 
