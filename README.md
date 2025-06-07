@@ -5,9 +5,28 @@
 
 Explore the vast collection of artworks from the Art Institute of Chicago directly on your iOS device. This SwiftUI application provides a seamless browsing experience with paginated loading and detailed artwork views using the museum's public API.
 
-<a href="Images/1.%20Application%20Launch%20Phase.PNG">
-  <img src="Images/0.%20App%20Preview%20Detailed%20Artwork.PNG" alt="0.%20App%20Preview%20Detailed%20Artwork.PNG" width="200"/>
-</a>
+
+<div align="center">
+
+   <a href="Images/1.%20Application%20Launch%20Phase.PNG">
+    <img src="Images/1.%20Application%20Launch%20Phase.PNG" alt="1. Application Launch Phase" width="200"/>
+   </a>
+  
+  <a href="Images/2. View Artwork Details - Image and Title.PNG">
+    <img src="Images/2. View Artwork Details - Image and Title.PNG" alt="2. Artwork Selection Phase" width="200"/>
+  </a>
+
+  <a href="Images/3. Jumping to a specific page and Scrolling down.PNG">
+    <img src="Images/3. Jumping to a specific page and Scrolling down.PNG" alt="3. Application Launch Phase" width="200"/>
+  </a>
+  
+  <a href="Images/0.%20App%20Preview%20Detailed%20Artwork.PNG">
+  <img src="Images/0.%20App%20Preview%20Detailed%20Artwork.PNG" alt="Images/0.%20App%20Preview%20Detailed%20Artwork.PNG" width="200"/>
+  </a>
+  
+</div>
+
+
 
 ---
 
