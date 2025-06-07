@@ -16,6 +16,10 @@ Explore the vast collection of artworks from the Art Institute of Chicago direct
     <img src="Images/2. View Artwork Details - Image and Title.PNG" alt="2. Artwork Selection Phase" width="200"/>
   </a>
   
+    <a href="Images/2. View Artwork Details - Image and Title.PNG">
+    <img src="Images/2.1. View Artwork Details - Image and Title.PNG" alt="2.1. Artwork Selection Phase" width="200"/>
+  </a>
+  
   <a href="Images/0.%20App%20Preview%20Detailed%20Artwork.PNG">
   <img src="Images/0.%20App%20Preview%20Detailed%20Artwork.PNG" alt="Images/0.%20App%20Preview%20Detailed%20Artwork.PNG" width="200"/>
   </a>
