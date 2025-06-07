@@ -21,7 +21,7 @@ Explore the vast collection of artworks from the Art Institute of Chicago direct
 
 ---
 
-## Sequence Diagram 1: Data Flow Architecture
+## Sequence Diagram 1: Full Artwork Discovery Flow: Launch → View → Navigate
 
 This diagram illustrates the application's data retrieval and rendering process:
 
