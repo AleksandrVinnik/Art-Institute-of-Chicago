@@ -8,16 +8,12 @@ Explore the vast collection of artworks from the Art Institute of Chicago direct
 
 <div align="center">
 
-   <a href="Images/1.%20Application%20Launch%20Phase.PNG">
-    <img src="Images/1.%20Application%20Launch%20Phase.PNG" alt="1. Application Launch Phase" width="200"/>
-   </a>
+  <a href="Images/3. Jumping to a specific page and Scrolling down.PNG">
+    <img src="Images/3. Jumping to a specific page and Scrolling down.PNG" alt="3. Application Launch Phase" width="200"/>
+  </a>
   
   <a href="Images/2. View Artwork Details - Image and Title.PNG">
     <img src="Images/2. View Artwork Details - Image and Title.PNG" alt="2. Artwork Selection Phase" width="200"/>
-  </a>
-
-  <a href="Images/3. Jumping to a specific page and Scrolling down.PNG">
-    <img src="Images/3. Jumping to a specific page and Scrolling down.PNG" alt="3. Application Launch Phase" width="200"/>
   </a>
   
   <a href="Images/0.%20App%20Preview%20Detailed%20Artwork.PNG">
