@@ -82,7 +82,7 @@ sequenceDiagram
 - Displays artwork titles in list view with pagination status  
 
 <a href="Images/1.%20Application%20Launch%20Phase.PNG">
-  <img src="Images/1.%20Application%20Launch%20Phase.PNG" alt="1. Application Launch Phase" width="400"/>
+  <img src="Images/1.%20Application%20Launch%20Phase.PNG" alt="1. Application Launch Phase" width="300"/>
 </a>
 
 #### 2️⃣ Artwork Selection Phase
@@ -95,7 +95,7 @@ sequenceDiagram
 - Displays detail view with image, title, and navigation controls  
 
 <a href="Images/2. View Artwork Details - Image and Title.PNG">
-  <img src="Images/2. View Artwork Details - Image and Title.PNG" alt="2. Artwork Selection Phase" width="400"/>
+  <img src="Images/2. View Artwork Details - Image and Title.PNG" alt="2. Artwork Selection Phase" width="300"/>
 </a>
 
 
@@ -110,7 +110,7 @@ sequenceDiagram
 - Updates UI with new artworks and pagination info  
 
 <a href="Images/3. Jumping to a specific page and Scrolling down.PNG">
-  <img src="Images/3. Jumping to a specific page and Scrolling down.PNG" alt="3. Application Launch Phase" width="400"/>
+  <img src="Images/3. Jumping to a specific page and Scrolling down.PNG" alt="3. Application Launch Phase" width="300"/>
 </a>
 
 ---
