@@ -59,7 +59,7 @@ sequenceDiagram
     deactivate App
     
     Note over User,IIIF: 3️⃣ Page Navigation
-    User->>App: 12. Enters page number N
+    User->>App: 12. Enters page number N or Scroll Down
     activate App
     App->>App: 13. Validate input: 1 ≤ N ≤ totalPages
     App->>API: 14. GET /artworks?page=N
@@ -85,7 +85,7 @@ sequenceDiagram
 
 - User selects specific artwork from list  
 - App retrieves image identifier (`imageId`) from model  
-- Constructs IIIF URL and requests high-resolution image  
+- Constructs IIIF URL and requests image  
 - IIIF server returns optimized JPEG image data  
 - App decodes image data  
 - Displays detail view with image, title, and navigation controls  
@@ -125,10 +125,10 @@ The API returns a JSON payload containing:
 - Image identifiers (`imageId`) for IIIF image service  
 
 #### Image Retrieval
-For each artwork with a valid `imageId`, the app constructs an IIIF-compliant URL and requests the high-resolution image from the IIIF Image API.
+For each artwork with a valid `imageId`, the app constructs an IIIF-compliant URL and requests the image from the IIIF Image API.
 
 #### Image Delivery
-The IIIF service responds with optimized image data, using IIIF's protocol for efficient delivery and dynamic sizing.
+The IIIF service responds with optimized image data, using IIIF's protocol for efficient delivery.
 
 #### Content Rendering
 The app combines metadata and images to render:
@@ -142,7 +142,6 @@ The app combines metadata and images to render:
 
 - **Efficient Data Handling:** Metadata and image requests are decoupled for better performance  
 - **Responsive Loading:** Images load asynchronously without blocking the UI  
-- **Adaptive Image Sizing:** IIIF protocol delivers optimal image size for the device  
 - **Persistence:** ViewModel retains pagination state across user navigation  
 
 
