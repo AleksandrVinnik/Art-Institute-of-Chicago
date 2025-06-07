@@ -117,10 +117,11 @@ sequenceDiagram
 - App parses JSON into `Artwork` model objects  
 - Displays artwork titles in list view with pagination status  
 
-<a href="Images/1.%20Application%20Launch%20Phase.PNG">
-  <img src="Images/1.%20Application%20Launch%20Phase.PNG" alt="1. Application Launch Phase" width="300"/>
-</a>
-
+<div align="center">
+    <a href="Images/1.%20Application%20Launch%20Phase.PNG">
+      <img src="Images/1.%20Application%20Launch%20Phase.PNG" alt="1. Application Launch Phase" width="300"/>
+    </a>
+</div>
 #### 2️⃣ Artwork Selection Phase
 
 - User selects specific artwork from list  
@@ -130,10 +131,11 @@ sequenceDiagram
 - App decodes image data  
 - Displays detail view with image, title, and navigation controls  
 
-<a href="Images/2. View Artwork Details - Image and Title.PNG">
-  <img src="Images/2. View Artwork Details - Image and Title.PNG" alt="2. Artwork Selection Phase" width="300"/>
-</a>
-
+<div align="center">
+    <a href="Images/2. View Artwork Details - Image and Title.PNG">
+      <img src="Images/2. View Artwork Details - Image and Title.PNG" alt="2. Artwork Selection Phase" width="300"/>
+    </a>
+</div>
 
 #### 3️⃣ Page Navigation Phase (Dual Mode)
 
@@ -161,10 +163,11 @@ sequenceDiagram
 | **Jump to Page**| 🔴 Cleared            | Specific page (N)      | Fresh content only      |
 | **Scroll Down** | 🟢 Appended           | Next page (current+1)  | Combined content        |
 
-<a href="Images/3. Jumping to a specific page and Scrolling down.PNG">
-  <img src="Images/3. Jumping to a specific page and Scrolling down.PNG" alt="3. Application Launch Phase" width="300"/>
-</a>
-
+<div align="center">
+    <a href="Images/3. Jumping to a specific page and Scrolling down.PNG">
+      <img src="Images/3. Jumping to a specific page and Scrolling down.PNG" alt="3. Application Launch Phase" width="300"/>
+    </a>
+</div>
 ---
 
 ### 🔧 Key Technical Details
