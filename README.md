@@ -284,17 +284,22 @@ Swift 5.9+
 
 ## Installation
 
-### Clone the repository:
-bash 
+### 1. Clone the repository
+```bash
 git clone https://github.com/AleksandrVinnik/Art-Institute-of-Chicago
+```
 
-### Open the project in Xcode:
-bash 
-cd art-institute-explorer
+### 2. Open the project in Xcode:
 
+```bash
+cd Art-Institute-of-Chicago
 open Art\ Institute\ of\ Chicago.xcodeproj
+```
+### 3. Build and run the project
 
+```
 Build and run the project (⌘ + R)
+```
 
 ---
 
@@ -341,8 +346,7 @@ https://www.artic.edu/iiif/2/{identifier}/full/843,/0/default.jpg
 ```tree
 src/
 ├── Models/
-│   ├── Artwork.swift          # Codable struct
-│   └── Pagination.swift       # API pagination
+│   └── Artwork.swift          # Codable struct
 ├── ViewModels/
 │   └── ArtworkViewModel.swift # ObservableObject
 ├── Views/
