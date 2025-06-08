@@ -358,6 +358,8 @@ src/
 
 ---
 
-License
+## ⚖️ Legal
 
-Distributed under the MIT License. See LICENSE for more information.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**Terms**: This project is distributed under the MIT License. See the 📜 [LICENSE](LICENSE) file for details.
