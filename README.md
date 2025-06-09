@@ -183,7 +183,7 @@ sequenceDiagram
 
 ---
 
-## Diagram 2: iOS Application Flow Architecture
+## Diagram 2: iOS Application Architecture
 
 ```mermaid
 graph TD
