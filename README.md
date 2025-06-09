@@ -39,7 +39,7 @@ Explore the vast collection of artworks from the Art Institute of Chicago direct
 
 ---
 
-## Diagram 1 - End-to-End App Flow: Launch → View → Navigate
+## Diagram 1: End-to-End App Flow: Launch → View → Navigate
 
 This Sequence Diagram illustrates the application's data retrieval and rendering process:
 
