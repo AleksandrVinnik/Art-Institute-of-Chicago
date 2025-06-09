@@ -24,16 +24,11 @@ Explore the vast collection of artworks from the Art Institute of Chicago direct
   <a href="Images/0. App Preview Detailed Artwork.PNG">
     <img src="Images/0. App Preview Detailed Artwork.PNG" alt="0. App Preview Detailed Artwork.PNG" width="200"/>
   </a>
-  
-
 </div>
-
-
 
 ---
 
 ## Features
-
 
 🖼️ **Artwork Discovery** - Browse paginated collections with infinite scrolling  
 🔍 **Precise Navigation** - Jump directly to specific pages  
@@ -108,6 +103,7 @@ sequenceDiagram
         deactivate App
     end
 ```
+
 ### 📲 Processing Steps Breakdown
 
 #### 1️⃣ Application Launch Phase
@@ -123,6 +119,7 @@ sequenceDiagram
       <img src="Images/1.%20Application%20Launch%20Phase.PNG" alt="1. Application Launch Phase" width="300"/>
     </a>
 </div>
+
 #### 2️⃣ Artwork Selection Phase
 
 - User selects specific artwork from list  
@@ -169,9 +166,10 @@ sequenceDiagram
       <img src="Images/3. Jumping to a specific page and Scrolling down.PNG" alt="3. Application Launch Phase" width="300"/>
     </a>
 </div>
+
 ---
 
-### 🔧 Key Technical Details
+### 🔧 Key Technical Highlights
 
 - **Image Optimization:** IIIF protocol delivers exactly sized images (843px width)  
 - **Data Caching:** Artwork metadata cached locally after first fetch  
@@ -179,41 +177,9 @@ sequenceDiagram
 - **Efficient Rendering:** SwiftUI updates only changed elements in list  
 - **Error Handling:** Missing images display fallback text  
 - **Responsive UI:** Loading states shown during network operations  
-
----
-
-### 🔍 Process Explanation (Overview)
-
-#### Initial Request
-The iOS application requests artwork metadata from the Art Institute of Chicago’s API with a specified page number for paginated results.
-
-#### Metadata Response
-The API returns a JSON payload containing:
-- Artwork details (ID, title, artist information)  
-- Pagination metadata (current page, total pages)  
-- Image identifiers (`imageId`) for IIIF image service  
-
-#### Image Retrieval
-For each artwork with a valid `imageId`, the app constructs an IIIF-compliant URL and requests the image from the IIIF Image API.
-
-#### Image Delivery
-The IIIF service responds with optimized image data, using IIIF's protocol for efficient delivery.
-
-#### Content Rendering
-The app combines metadata and images to render:
-- Paginated list view with artwork titles  
-- Detail view with high-resolution images  
-- Navigation controls with real-time pagination status  
-
----
-
-## 💡 Technical Highlights
-
 - **Efficient Data Handling:** Metadata and image requests are decoupled for better performance  
 - **Responsive Loading:** Images load asynchronously without blocking the UI  
 - **Persistence:** ViewModel retains pagination state across user navigation  
-
-
 
 ---
 
@@ -325,8 +291,6 @@ Use the navigation bar to return to the list.
 API Reference.
 
 ---
-
-
 
 ## Artwork List Endpoint
 
