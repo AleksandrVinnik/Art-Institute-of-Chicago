@@ -172,12 +172,8 @@ sequenceDiagram
 ### 🔧 Key Technical Highlights
 
 - **Image Optimization:** IIIF protocol delivers exactly sized images (843px width)  
-- **Data Caching:** Artwork metadata cached locally after first fetch  
 - **Input Validation:** Page numbers validated before API requests  
-- **Efficient Rendering:** SwiftUI updates only changed elements in list  
 - **Error Handling:** Missing images display fallback text  
-- **Responsive UI:** Loading states shown during network operations  
-- **Efficient Data Handling:** Metadata and image requests are decoupled for better performance  
 - **Responsive Loading:** Images load asynchronously without blocking the UI  
 - **Persistence:** ViewModel retains pagination state across user navigation  
 
@@ -288,7 +284,7 @@ Press "Go" to navigate directly to that page.
 Tap any artwork title in the list. 
 View artwork details including title and high-resolution image. 
 Use the navigation bar to return to the list. 
-API Reference.
+
 
 ---
 
