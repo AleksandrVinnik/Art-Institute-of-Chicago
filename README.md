@@ -125,8 +125,8 @@ sequenceDiagram
 - User selects specific artwork from list  
 - App retrieves image identifier (`imageId`) from model  
 - Constructs IIIF URL and requests image  
-- IIIF server returns optimized JPEG image data  
-- App decodes image data  
+- IIIF server returns optimized JPEG image data (843px width)  
+- Images load asynchronously without blocking the UI  
 - Displays detail view with image, title, and navigation controls  
 
 <div align="center">
@@ -166,17 +166,7 @@ sequenceDiagram
       <img src="Images/3. Jumping to a specific page and Scrolling down.PNG" alt="3. Application Launch Phase" width="300"/>
     </a>
 </div>
-
----
-
-### 🔧 Key Technical Highlights
-
-- **Image Optimization:** IIIF protocol delivers exactly sized images (843px width)  
-- **Input Validation:** Page numbers validated before API requests  
-- **Error Handling:** Missing images display fallback text  
-- **Responsive Loading:** Images load asynchronously without blocking the UI  
-- **Persistence:** ViewModel retains pagination state across user navigation  
-
+ 
 ---
 
 ## Diagram 2: iOS Application Architecture
